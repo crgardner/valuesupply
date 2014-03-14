@@ -14,7 +14,7 @@ public class ValueSupply {
 
     public void provideAllTo(ValueConsumer consumer) {
         for (ValueSupplyCategory category : suppliers.rowKeySet()) {
-            consumer.provide(category, suppliers.row(category));
+            consumer.accept(category, suppliers.row(category));
         }
     }
 
