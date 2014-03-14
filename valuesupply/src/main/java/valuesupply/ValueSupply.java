@@ -1,7 +1,5 @@
 package valuesupply;
 
-import java.util.Map;
-
 import com.google.common.base.Supplier;
 import com.google.common.collect.*;
 
@@ -16,8 +14,7 @@ public class ValueSupply {
 
     public void provideAllTo(ValueConsumer consumer) {
         for (ValueSupplyCategory category : suppliers.rowKeySet()) {
-            Map<String, Supplier<String>> row = suppliers.row(category);
-            consumer.provide(category, row);
+            consumer.provide(category, suppliers.row(category));
         }
     }
 

@@ -13,6 +13,4 @@ public class ValueSupplyCategory {
         return String.format("{name=%s}", name);
     }
 
-    
-
 }
