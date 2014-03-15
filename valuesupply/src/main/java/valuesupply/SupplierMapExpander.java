@@ -13,7 +13,7 @@ public class SupplierMapExpander {
         }
     };
 
-    public Map<String, String> transform(Map<String, Supplier<String>> suppliers) {
+    public Map<String, String> expand(Map<String, Supplier<String>> suppliers) {
         return Maps.transformValues(suppliers, expandValueFunction);
     }
 }

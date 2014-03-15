@@ -18,7 +18,7 @@ public class SupplierMapExpanderTest {
     
     private Map<String, Supplier<String>> suppliers;
     private Map<String, String> expandedSuppliers;
-    private SupplierMapExpander transformer;
+    private SupplierMapExpander expander;
 
     @Mock
     private Supplier<String> firstSupplier;
@@ -29,14 +29,14 @@ public class SupplierMapExpanderTest {
     @Before
     public void setUp() {
         suppliers = ImmutableMap.of("first", firstSupplier, "second", secondSupplier);
-        transformer = new SupplierMapExpander();
+        expander = new SupplierMapExpander();
     }
     
     @Test
     public void expandsAllMappedSuppliers() {
         expectingSuppliersToProvideValues();
         
-        expandedSuppliers = transformer.transform(suppliers);
+        expandedSuppliers = expander.expand(suppliers);
         
         assertThat(expandedSuppliers).containsEntry("first", "hello")
                                      .containsEntry("second", "goodbye");
