@@ -5,7 +5,7 @@ import com.google.common.collect.*;
 
 public class ValueSupply {
 
-    private Table<ValueSupplyCategory,String, Supplier<String>> suppliers = HashBasedTable.create();
+    private final Table<ValueSupplyCategory, String, Supplier<String>> suppliers = HashBasedTable.create();
 
     public void add(ValueSupplyCategory category, String name,
             Supplier<String> supplier) {
