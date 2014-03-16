@@ -28,23 +28,27 @@ public class SupplierMapExpanderTest {
 
     @Before
     public void setUp() {
-        suppliers = ImmutableMap.of("first", firstSupplier, "second", secondSupplier);
         expander = new SupplierMapExpander();
     }
     
     @Test
     public void expandsAllMappedSuppliers() {
-        expectingSuppliersToProvideValues();
+        havingsuppliersMappedWithKeys("first", "second");
+        expectingSuppliersToProvideValues("hello", "goodbye");
         
         expandedSuppliers = expander.expand(suppliers);
         
         assertThat(expandedSuppliers).containsEntry("first", "hello")
                                      .containsEntry("second", "goodbye");
     }
+    
+    private void havingsuppliersMappedWithKeys(String firstKey, String secondKey) {
+        suppliers = ImmutableMap.of(firstKey, firstSupplier, secondKey, secondSupplier);
+    }
 
-    private void expectingSuppliersToProvideValues() {
-        when(firstSupplier.get()).thenReturn("hello");
-        when(secondSupplier.get()).thenReturn("goodbye");
+    private void expectingSuppliersToProvideValues(String firstValue, String secondValue) {
+        when(firstSupplier.get()).thenReturn(firstValue);
+        when(secondSupplier.get()).thenReturn(secondValue);
     }
 
 }
