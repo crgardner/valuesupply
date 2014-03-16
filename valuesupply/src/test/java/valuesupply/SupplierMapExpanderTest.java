@@ -3,7 +3,10 @@ package valuesupply;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.Map;
+
+import javax.ws.rs.core.UriBuilder;
 
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -25,6 +28,7 @@ public class SupplierMapExpanderTest {
     
     @Mock
     private Supplier<String> secondSupplier;
+    private URI uri;
 
     @Before
     public void setUp() {
@@ -49,6 +53,19 @@ public class SupplierMapExpanderTest {
     private void expectingSuppliersToProvideValues(String firstValue, String secondValue) {
         when(firstSupplier.get()).thenReturn(firstValue);
         when(secondSupplier.get()).thenReturn(secondValue);
+    }
+    
+    @Test
+    public void expandsValuesForUriExample() throws Exception {
+        havingsuppliersMappedWithKeys("code1", "code2");
+        expectingSuppliersToProvideValues("one", "two");
+        
+        expandedSuppliers = expander.expand(suppliers);
+        
+        uri = UriBuilder.fromUri("http://api.myhost.com/v1/widgets/{code1}/attribute/{code2}")
+                        .buildFromEncodedMap(expandedSuppliers);
+        
+        assertThat(uri).isEqualTo(new URI("http://api.myhost.com/v1/widgets/one/attribute/two"));
     }
 
 }

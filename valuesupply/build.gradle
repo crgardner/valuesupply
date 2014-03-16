@@ -16,4 +16,5 @@ dependencies {
     testCompile 'org.mockito:mockito-all:1.9.5'
 
     compile 'com.google.guava:guava:16.0.1'
+    compile 'org.glassfish.jersey.core:jersey-client:2.7'
 }
