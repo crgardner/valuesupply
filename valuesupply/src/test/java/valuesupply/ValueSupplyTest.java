@@ -1,12 +1,13 @@
 package valuesupply;
 
-import static org.mockito.Mockito.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -27,14 +28,9 @@ public class ValueSupplyTest {
     @Mock
     private ValueConsumer consumer;
 
-    @Mock
-    private Supplier<String> helloSupplier;
-
-    @Mock
-    private Supplier<String> onTheWaySupplier;
-
-    @Mock
-    private Supplier<String> goodbyeSupplier;
+    private Supplier<Object> helloSupplier;
+    private Supplier<Object> onTheWaySupplier;
+    private Supplier<Object> goodbyeSupplier;
 	private Map<ValueSupplyCategory, Map<String, Object>> allSuppliers;
 
     @Before
@@ -46,14 +42,18 @@ public class ValueSupplyTest {
 
         httpHeaderCategory = new BasicValueSupplyCategory("http-header");
         urlComponentCategory = new BasicValueSupplyCategory("url-component");
+
+        helloSupplier = new KnownValueSupplier("hello");
+        onTheWaySupplier = new KnownValueSupplier("onTheWay");
+        goodbyeSupplier = new KnownValueSupplier("goodbye");
+
+        valueSupply.add(httpHeaderCategory, arrivalName, helloSupplier);
+        valueSupply.add(httpHeaderCategory, approachingName, onTheWaySupplier);
+        valueSupply.add(urlComponentCategory, departureName, goodbyeSupplier);
     }
 
     @Test
     public void providesCategorizedValueSuppliersToConsumers() {
-        valueSupply.add(httpHeaderCategory, arrivalName, helloSupplier);
-        valueSupply.add(httpHeaderCategory, approachingName, onTheWaySupplier);
-        valueSupply.add(urlComponentCategory, departureName, goodbyeSupplier);
-
         valueSupply.provideEachByCategoryTo(consumer);
 
         verify(consumer).accept(httpHeaderCategory, ImmutableMap.of(arrivalName, helloSupplier,
@@ -63,14 +63,6 @@ public class ValueSupplyTest {
 
     @Test
     public void returnsAllCategorizedExpandedSuppliers() {
-    	when(helloSupplier.get()).thenReturn("hello");
-    	when(onTheWaySupplier.get()).thenReturn("onTheWay");
-    	when(goodbyeSupplier.get()).thenReturn("goodbye");
-
-        valueSupply.add(httpHeaderCategory, arrivalName, helloSupplier);
-        valueSupply.add(httpHeaderCategory, approachingName, onTheWaySupplier);
-        valueSupply.add(urlComponentCategory, departureName, goodbyeSupplier);
-
 
         allSuppliers = valueSupply.getAllCategorizedExpandedSuppliers();
 
@@ -82,4 +74,12 @@ public class ValueSupplyTest {
         assertThat(allSuppliers).containsEntry(urlComponentCategory, new ImmutableMap.Builder<String, Object>().put(departureName, "goodbye").build());
     }
 
+
+    @Test
+	public void returnsRequestedCategoryOfSupplier() throws Exception {
+    	Map<ValueSupplyCategory, Map<String, Object>> matching = valueSupply.findExpandedSuppliersOf(httpHeaderCategory);
+
+    	assertThat(matching.get(httpHeaderCategory)).containsEntry(arrivalName, helloSupplier.get())
+    						.containsEntry(approachingName, onTheWaySupplier.get());
+	}
 }

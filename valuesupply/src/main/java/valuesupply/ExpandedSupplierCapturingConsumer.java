@@ -13,7 +13,7 @@ public class ExpandedSupplierCapturingConsumer implements ValueConsumer {
     private SupplierMapExpander expander = new SupplierMapExpander();
 
     @Override
-    public void accept(ValueSupplyCategory category, Map<String, Supplier<String>> suppliers) {
+    public void accept(ValueSupplyCategory category, Map<String, Supplier<Object>> suppliers) {
         expandedSuppliers.put(category, expander.expand(suppliers));
     }
 }
