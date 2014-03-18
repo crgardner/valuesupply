@@ -13,8 +13,8 @@ import com.google.common.collect.ImmutableMap;
 @RunWith(MockitoJUnitRunner.class)
 public class ValueSupplyTest {
 
-    private ValueSupplyCategory httpHeaderCategory;
-    private ValueSupplyCategory urlComponentCategory;
+    private BasicValueSupplyCategory httpHeaderCategory;
+    private BasicValueSupplyCategory urlComponentCategory;
     private ValueSupply valueSupply;
     private String arrivalName;
     private String departureName;
@@ -39,8 +39,8 @@ public class ValueSupplyTest {
         departureName = "departure";
         approachingName = "approaching";
 
-        httpHeaderCategory = new ValueSupplyCategory("http-header");
-        urlComponentCategory = new ValueSupplyCategory("url-component");
+        httpHeaderCategory = new BasicValueSupplyCategory("http-header");
+        urlComponentCategory = new BasicValueSupplyCategory("url-component");
     }
 
     @Test

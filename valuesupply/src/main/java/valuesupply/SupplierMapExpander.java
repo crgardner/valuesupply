@@ -7,13 +7,13 @@ import com.google.common.collect.Maps;
 
 public class SupplierMapExpander {
 
-    private final static Function<Supplier<String>, String> expandValueFunction = new Function<Supplier<String>, String>() {
+    private final static Function<Supplier<String>, Object> expandValueFunction = new Function<Supplier<String>, Object>() {
         @Override public String apply(Supplier<String> input) {
             return input.get();
         }
     };
 
-    public Map<String, String> expand(Map<String, Supplier<String>> suppliers) {
+    public Map<String, Object> expand(Map<String, Supplier<String>> suppliers) {
         return Maps.transformValues(suppliers, expandValueFunction);
     }
 }

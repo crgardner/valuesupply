@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableMap;
 public class SupplierMapExpanderTest {
     
     private Map<String, Supplier<String>> suppliers;
-    private Map<String, String> expandedSuppliers;
+    private Map<String, Object> expandedSuppliers;
     private SupplierMapExpander expander;
 
     @Mock
@@ -62,7 +62,8 @@ public class SupplierMapExpanderTest {
         
         expandedSuppliers = expander.expand(suppliers);
         
-        uri = UriBuilder.fromUri("http://api.myhost.com/v1/widgets/{code1}/attribute/{code2}")
+        uri = UriBuilder.fromUri("http://api.myhost.com")
+                        .path("v1/widgets/{code1}/attribute/{code2}")
                         .buildFromEncodedMap(expandedSuppliers);
         
         assertThat(uri).isEqualTo(new URI("http://api.myhost.com/v1/widgets/one/attribute/two"));
