@@ -1,6 +1,10 @@
 package valuesupply;
 
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -31,6 +35,7 @@ public class ValueSupplyTest {
 
     @Mock
     private Supplier<String> goodbyeSupplier;
+	private Map<ValueSupplyCategory, Map<String, Object>> allSuppliers;
 
     @Before
     public void setUp() {
@@ -49,11 +54,32 @@ public class ValueSupplyTest {
         valueSupply.add(httpHeaderCategory, approachingName, onTheWaySupplier);
         valueSupply.add(urlComponentCategory, departureName, goodbyeSupplier);
 
-        valueSupply.provideAllTo(consumer);
+        valueSupply.provideEachByCategoryTo(consumer);
 
         verify(consumer).accept(httpHeaderCategory, ImmutableMap.of(arrivalName, helloSupplier,
                                                                     approachingName, onTheWaySupplier));
         verify(consumer).accept(urlComponentCategory, ImmutableMap.of(departureName, goodbyeSupplier));
+    }
+
+    @Test
+    public void returnsAllCategorizedExpandedSuppliers() {
+    	when(helloSupplier.get()).thenReturn("hello");
+    	when(onTheWaySupplier.get()).thenReturn("onTheWay");
+    	when(goodbyeSupplier.get()).thenReturn("goodbye");
+
+        valueSupply.add(httpHeaderCategory, arrivalName, helloSupplier);
+        valueSupply.add(httpHeaderCategory, approachingName, onTheWaySupplier);
+        valueSupply.add(urlComponentCategory, departureName, goodbyeSupplier);
+
+
+        allSuppliers = valueSupply.getAllCategorizedExpandedSuppliers();
+
+        Map<String, Object> items = new HashMap<>();
+        items.put(arrivalName, "hello");
+        items.put(approachingName, "onTheWay");
+
+        assertThat(allSuppliers).containsEntry(httpHeaderCategory, items);
+        assertThat(allSuppliers).containsEntry(urlComponentCategory, new ImmutableMap.Builder<String, Object>().put(departureName, "goodbye").build());
     }
 
 }

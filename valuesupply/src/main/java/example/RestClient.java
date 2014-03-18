@@ -15,11 +15,8 @@ public class RestClient {
     public String execute(String endpoint, String resource, ValueSupply valueSupply) {
         WebTarget target = ClientBuilder.newClient().target(endpoint).path(resource);
 
-        ExpandedSupplierCapturingConsumer consumer = new ExpandedSupplierCapturingConsumer();
-        valueSupply.provideAllTo(consumer);
+        Map<ValueSupplyCategory, Map<String, Object>> expandedSuppliers = valueSupply.getAllCategorizedExpandedSuppliers();
 
-        Map<ValueSupplyCategory, Map<String, Object>> expandedSuppliers = consumer.getExpandedSuppliers();
-        
         if (expandedSuppliers.containsKey(URL_COMPONENT)) {
             target = target.resolveTemplatesFromEncoded(expandedSuppliers.get(URL_COMPONENT));
         }

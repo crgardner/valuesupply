@@ -1,5 +1,7 @@
 package valuesupply;
 
+import java.util.Map;
+
 import com.google.common.base.Supplier;
 import com.google.common.collect.*;
 
@@ -12,10 +14,16 @@ public class ValueSupply {
         suppliers.put(category, name, supplier);
     }
 
-    public void provideAllTo(ValueConsumer consumer) {
+    public void provideEachByCategoryTo(ValueConsumer consumer) {
         for (ValueSupplyCategory category : suppliers.rowKeySet()) {
             consumer.accept(category, suppliers.row(category));
         }
     }
+
+	public Map<ValueSupplyCategory, Map<String, Object>> getAllCategorizedExpandedSuppliers() {
+		ExpandedSupplierCapturingConsumer consumer = new ExpandedSupplierCapturingConsumer();
+		provideEachByCategoryTo(consumer);
+		return consumer.getExpandedSuppliers();
+	}
 
 }
