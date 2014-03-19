@@ -1,6 +1,5 @@
-package example;
+package valuesupply;
 
-import valuesupply.ValueSupplyCategory;
 
 public enum StandardValueSupplyCategory implements ValueSupplyCategory {
     URL_COMPONENT,

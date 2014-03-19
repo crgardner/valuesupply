@@ -1,6 +1,6 @@
 package example;
 
-import static example.StandardValueSupplyCategory.*;
+import static valuesupply.StandardValueSupplyCategory.*;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -12,10 +12,8 @@ import valuesupply.*;
 
 public class RestClient {
 
-    public String execute(String endpoint, String resource,
-            ValueSupply valueSupply) {
-        WebTarget target = ClientBuilder.newClient().target(endpoint)
-                .path(resource);
+    public String execute(String endpoint, String resource, ValueSupply valueSupply) {
+        WebTarget target = ClientBuilder.newClient().target(endpoint).path(resource);
         Map<ValueSupplyCategory, Map<String, Object>> expandedSuppliers = valueSupply
                 .getAllCategorizedExpandedSuppliers();
         target = prepareUrl(target, expandedSuppliers);
@@ -48,8 +46,7 @@ public class RestClient {
     private WebTarget prepareUrl(WebTarget target,
             Map<ValueSupplyCategory, Map<String, Object>> expandedSuppliers) {
         if (expandedSuppliers.containsKey(URL_COMPONENT)) {
-            target = target.resolveTemplatesFromEncoded(expandedSuppliers
-                    .get(URL_COMPONENT));
+            target = target.resolveTemplatesFromEncoded(expandedSuppliers.get(URL_COMPONENT));
         }
         return target;
     }
