@@ -2,6 +2,9 @@ package valuesupply;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import util.function.Consumer;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashBasedTable;
@@ -33,5 +36,15 @@ public class ValueSupply {
             expandedSuppliers.put(category, expander.expand(suppliers.row(category)));
         }
         return expandedSuppliers;
+    }
+
+    public void supplyAllOf(ValueSupplyCategory category, Consumer<Map<String, Object>> allConsumer) {
+        allConsumer.accept(findExpandedSuppliersOf(category).get(category));
+    }
+
+    public void supplyEachOf(ValueSupplyCategory category, Consumer<Entry<String, Object>> eachConsumer) {
+        for (Entry<String, Object> entry : findExpandedSuppliersOf(category).get(category).entrySet()) {
+            eachConsumer.accept(entry);
+        }
     }
 }
