@@ -1,17 +1,10 @@
 package example;
 
-import static valuesupply.StandardValueSupplyCategory.HTTP_HEADER;
-import static valuesupply.StandardValueSupplyCategory.MEDIA_TYPE;
-import static valuesupply.StandardValueSupplyCategory.URL_COMPONENT;
+import static valuesupply.StandardValueSupplyCategory.*;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.*;
 import javax.ws.rs.client.Invocation.Builder;
 
-import util.function.Consumer;
 import valuesupply.ValueSupply;
 
 class RequestBuilder {
@@ -24,12 +17,8 @@ class RequestBuilder {
     }
 
     private void prepareUrl(final WebTarget webTarget) {
-        valueSupply.supplyAllOf(URL_COMPONENT, new Consumer<Map<String, Object>>() {
-
-            @Override
-            public void accept(Map<String, Object> urlComponents) {
-                request = webTarget.resolveTemplatesFromEncoded(urlComponents).request();
-            }
+        valueSupply.supplyAllOf(URL_COMPONENT, (urlComponents) -> {
+            request = webTarget.resolveTemplatesFromEncoded(urlComponents).request();
         });
     }
 
@@ -40,22 +29,14 @@ class RequestBuilder {
     }
 
     private void prepareHeaders() {
-        valueSupply.supplyEachOf(HTTP_HEADER, new Consumer<Map.Entry<String, Object>>() {
-
-            @Override
-            public void accept(Entry<String, Object> httpHeader) {
-                request.header(httpHeader.getKey(), httpHeader.getValue());
-            }
+        valueSupply.supplyEachOf(HTTP_HEADER, (httpHeader) -> {
+            request.header(httpHeader.getKey(), httpHeader.getValue());
         });
     }
 
     private void prepareMediaTypes() {
-        valueSupply.supplyEachOf(MEDIA_TYPE, new Consumer<Map.Entry<String, Object>>() {
-
-            @Override
-            public void accept(Entry<String, Object> mediaType) {
-                request.accept(mediaType.getValue().toString());
-            }
+        valueSupply.supplyEachOf(MEDIA_TYPE, (mediaType) -> {
+            request.accept(mediaType.getValue().toString());
         });
     }
 
