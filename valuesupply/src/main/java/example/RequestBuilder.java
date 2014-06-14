@@ -16,7 +16,7 @@ class RequestBuilder {
         prepareUrl(ClientBuilder.newClient().target(endpoint).path(resource));
     }
 
-    private void prepareUrl(final WebTarget webTarget) {
+    private void prepareUrl(WebTarget webTarget) {
         valueSupply.supplyAllOf(URL_COMPONENT, (urlComponents) -> {
             request = webTarget.resolveTemplatesFromEncoded(urlComponents).request();
         });

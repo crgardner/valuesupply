@@ -3,6 +3,7 @@ package valuesupply;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.*;
+
 import static java.util.stream.Collectors.*;
 import static java.util.Arrays.*;
 
@@ -33,10 +34,16 @@ public class ValueSupply {
     }
 
     public void supplyAllOf(ValueSupplyCategory category, Consumer<Map<String, Object>> allConsumer) {
-        allConsumer.accept(findExpandedSuppliersOf(category).get(category));
+        allConsumer.accept(expandedSuppliersOf(category));
     }
 
     public void supplyEachOf(ValueSupplyCategory category, Consumer<Entry<String, Object>> eachConsumer) {
-        findExpandedSuppliersOf(category).get(category).entrySet().stream().forEach(entry -> eachConsumer.accept(entry));
+        expandedSuppliersOf(category).entrySet()
+                                     .stream()
+                                     .forEach(entry -> eachConsumer.accept(entry));
+    }
+
+    private Map<String, Object> expandedSuppliersOf(ValueSupplyCategory category) {
+        return findExpandedSuppliersOf(category).get(category);
     }
 }
