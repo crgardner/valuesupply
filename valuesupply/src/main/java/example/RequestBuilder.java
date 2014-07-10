@@ -5,14 +5,14 @@ import static valuesupply.StandardValueSupplyCategory.MEDIA_TYPE;
 import static valuesupply.StandardValueSupplyCategory.URL_COMPONENT;
 
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
 
 import util.function.Consumer;
 import valuesupply.ValueSupply;
+import valuesupply.ValueSupplyItem;
 
 class RequestBuilder {
     private final ValueSupply valueSupply;
@@ -40,20 +40,20 @@ class RequestBuilder {
     }
 
     private void prepareHeaders() {
-        valueSupply.supplyEachOf(HTTP_HEADER, new Consumer<Map.Entry<String, Object>>() {
+        valueSupply.supplyEachOf(HTTP_HEADER, new Consumer<ValueSupplyItem>() {
 
             @Override
-            public void accept(Entry<String, Object> httpHeader) {
-                request.header(httpHeader.getKey(), httpHeader.getValue());
+            public void accept(ValueSupplyItem httpHeader) {
+                request.header(httpHeader.getName(), httpHeader.getValue());
             }
         });
     }
 
     private void prepareMediaTypes() {
-        valueSupply.supplyEachOf(MEDIA_TYPE, new Consumer<Map.Entry<String, Object>>() {
+        valueSupply.supplyEachOf(MEDIA_TYPE, new Consumer<ValueSupplyItem>() {
 
             @Override
-            public void accept(Entry<String, Object> mediaType) {
+            public void accept(ValueSupplyItem mediaType) {
                 request.accept(mediaType.getValue().toString());
             }
         });
