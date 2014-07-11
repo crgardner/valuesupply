@@ -12,12 +12,16 @@ public class ValueSupplyItem {
         this.supplier = supplier;
     }
 
-    public String getName() {
+    public String name() {
         return name;
     }
 
-    public Object getValue() {
+    public Object value() {
         return supplier.get();
+    }
+
+    public String valueAsString() {
+        return value().toString();
     }
 
 }

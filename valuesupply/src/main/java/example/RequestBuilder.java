@@ -44,7 +44,7 @@ class RequestBuilder {
 
             @Override
             public void accept(ValueSupplyItem httpHeader) {
-                request.header(httpHeader.getName(), httpHeader.getValue());
+                request.header(httpHeader.name(), httpHeader.valueAsString());
             }
         });
     }
@@ -54,7 +54,7 @@ class RequestBuilder {
 
             @Override
             public void accept(ValueSupplyItem mediaType) {
-                request.accept(mediaType.getValue().toString());
+                request.accept(mediaType.valueAsString());
             }
         });
     }

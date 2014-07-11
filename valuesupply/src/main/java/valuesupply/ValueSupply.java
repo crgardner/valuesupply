@@ -21,7 +21,7 @@ public class ValueSupply {
         Map<String, Object> itemsByName = new HashMap<>();
 
         for (ValueSupplyItem valueSupplyItem : experimentalSuppliers.get(category)) {
-            itemsByName.put(valueSupplyItem.getName(), valueSupplyItem.getValue());
+            itemsByName.put(valueSupplyItem.name(), valueSupplyItem.valueAsString());
         }
         allConsumer.accept(itemsByName);
     }
