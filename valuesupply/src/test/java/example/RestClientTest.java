@@ -37,8 +37,6 @@ public class RestClientTest {
     private void prepareRequestAspects() {
         endpoint = "http://localhost:8089";
         resource = "/v1/providers/{companyName}/exports";
-        expandedResource = "/v1/providers/ACME/exports";
-        response = "[{'export': 'cigars'}, {'export': 'scotch'}]";
         userNameHeaderValue = "clintEastwood";
         companyNameComponentValue = "ACME";
     }
@@ -57,6 +55,9 @@ public class RestClientTest {
 
     @Test
     public void preparesCallBasedOnValueSuppliers() throws Exception {
+        expandedResource = "/v1/providers/ACME/exports";
+        response = "[{'export': 'cigars'}, {'export': 'scotch'}]";
+
         stubFor(get(urlEqualTo(expandedResource))
                 .withHeader("Accept", equalTo(MediaType.APPLICATION_JSON))
                 .withHeader("userName", equalTo(userNameHeaderValue))
