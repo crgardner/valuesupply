@@ -18,10 +18,10 @@ public class ValueSupply {
     }
 
     public void supplyAllOf(ValueSupplyCategory category, Consumer<Map<String, Object>> allConsumer) {
-        allConsumer.accept(groupItemsByNameWith(category));
+        allConsumer.accept(itemsWith(category));
     }
 
-    private Map<String, Object> groupItemsByNameWith(ValueSupplyCategory category) {
+    private Map<String, Object> itemsWith(ValueSupplyCategory category) {
         Map<String, Object> itemsByName = new HashMap<>();
 
         for (ValueSupplyItem valueSupplyItem : suppliers.get(category)) {
