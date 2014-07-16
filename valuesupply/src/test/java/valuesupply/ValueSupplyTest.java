@@ -22,63 +22,59 @@ public class ValueSupplyTest {
     private ValueSupplyCategory pendingResolutionCategory;
 
     private ValueSupply valueSupply;
-    private String arrivalName;
-    private String departureName;
-    private String approachingName;
+
+    private String helloName;
+    private String goodbyeName;
+    private String enRouteName;
+    private String pendingName;
 
     private Supplier<Object> helloSupplier;
-    private Supplier<Object> onTheWaySupplier;
+    private Supplier<Object> enRouteSupplier;
     private Supplier<Object> goodbyeSupplier;
-
-    @Mock
     private Supplier<Object> resolvedSupplier;
-
-    @Mock
     private Supplier<Object> toBeReplacedSupplier;
 
-    @Mock
-    private Consumer<Map<String, Object>> allConsumer;
-
-    @Mock
-    private Consumer<ValueSupplyItem> eachConsumer;
-
-    @Mock
-    private SupplierFactory supplierFactory;
+    @Mock private Consumer<Map<String, Object>> allConsumer;
+    @Mock private Consumer<ValueSupplyItem> eachConsumer;
+    @Mock private SupplierFactory supplierFactory;
 
     @Before
     public void setUp() {
         valueSupply = new ValueSupply(supplierFactory);
-        arrivalName = "arrival";
-        departureName = "departure";
-        approachingName = "approaching";
+        helloName = "hello";
+        goodbyeName = "goodbye";
+        enRouteName = "enRoute";
+        pendingName = "pending";
 
         httpHeaderCategory = new BasicValueSupplyCategory("http-header");
         urlComponentCategory = new BasicValueSupplyCategory("url-component");
         pendingResolutionCategory = new BasicValueSupplyCategory("toBeResolved");
 
         helloSupplier = new KnownValueSupplier("hello");
-        onTheWaySupplier = new KnownValueSupplier("onTheWay");
+        enRouteSupplier = new KnownValueSupplier("onTheWay");
         goodbyeSupplier = new KnownValueSupplier("goodbye");
+        resolvedSupplier = new KnownValueSupplier("resolved");
+        toBeReplacedSupplier = new KnownValueSupplier("toBeReplaced");
 
-        valueSupply.add(httpHeaderCategory, arrivalName, helloSupplier);
-        valueSupply.add(httpHeaderCategory, approachingName, onTheWaySupplier);
-        valueSupply.add(urlComponentCategory, departureName, goodbyeSupplier);
+        valueSupply.add(httpHeaderCategory, helloName, helloSupplier);
+        valueSupply.add(httpHeaderCategory, enRouteName, enRouteSupplier);
+        valueSupply.add(urlComponentCategory, goodbyeName, goodbyeSupplier);
     }
 
     @Test
     public void suppliesAllOfSpecifiedCategory() {
         valueSupply.supplyAllOf(httpHeaderCategory, allConsumer);
 
-        verify(allConsumer).accept(ImmutableMap.<String, Object>of(arrivalName, helloSupplier.get(),
-                                                                   approachingName, onTheWaySupplier.get()));
+        verify(allConsumer).accept(ImmutableMap.<String, Object>of(helloName, helloSupplier.get(),
+                                                                   enRouteName, enRouteSupplier.get()));
     }
 
     @Test
     public void suppliesEachOfSpecifiedCategory() {
         valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
-        verify(eachConsumer).accept(refEq(new ValueSupplyItem(arrivalName, helloSupplier)));
-        verify(eachConsumer).accept(refEq(new ValueSupplyItem(approachingName, onTheWaySupplier)));
+        verifyConsumerAcceptsValueSupplyItemOf(helloName, helloSupplier);
+        verifyConsumerAcceptsValueSupplyItemOf(enRouteName, enRouteSupplier);
     }
 
     @Test
@@ -88,7 +84,7 @@ public class ValueSupplyTest {
         valueSupply.add(urlComponentCategory, "asOfDate:LocalDate");
         valueSupply.supplyEachOf(urlComponentCategory, eachConsumer);
 
-        verify(eachConsumer).accept(refEq(new ValueSupplyItem("asOfDate:LocalDate", resolvedSupplier)));
+        verifyConsumerAcceptsValueSupplyItemOf("asOfDate:LocalDate", resolvedSupplier);
     }
 
     @Test(expected=UnknownSupplierException.class)
@@ -105,22 +101,26 @@ public class ValueSupplyTest {
 
     @Test
     public void allowsForPendingSuppliers() {
-        valueSupply.pend(pendingResolutionCategory, "pending");
-        valueSupply.resolvePending(pendingResolutionCategory, "pending", resolvedSupplier);
+        valueSupply.pend(pendingResolutionCategory, pendingName);
+        valueSupply.resolvePending(pendingResolutionCategory, pendingName, resolvedSupplier);
         valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
 
-        verify(eachConsumer).accept(refEq(new ValueSupplyItem("pending", resolvedSupplier)));
+        verifyConsumerAcceptsValueSupplyItemOf(pendingName, resolvedSupplier);
     }
 
     @Test
     public void replacesPreviousPendingSupplier() {
-        valueSupply.pend(pendingResolutionCategory, "pending");
-        valueSupply.resolvePending(pendingResolutionCategory, "pending", toBeReplacedSupplier);
-        valueSupply.resolvePending(pendingResolutionCategory, "pending", resolvedSupplier);
+        valueSupply.pend(pendingResolutionCategory, pendingName);
+        valueSupply.resolvePending(pendingResolutionCategory, pendingName, toBeReplacedSupplier);
+        valueSupply.resolvePending(pendingResolutionCategory, pendingName, resolvedSupplier);
 
         valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
 
-        verify(eachConsumer).accept(refEq(new ValueSupplyItem("pending", resolvedSupplier)));
-        verify(eachConsumer, never()).accept(refEq(new ValueSupplyItem("pending", toBeReplacedSupplier)));
+        verifyConsumerAcceptsValueSupplyItemOf(pendingName, resolvedSupplier);
+        verify(eachConsumer, never()).accept(refEq(new ValueSupplyItem(pendingName, toBeReplacedSupplier)));
+    }
+
+    private void verifyConsumerAcceptsValueSupplyItemOf(String name, Supplier<Object> supplier) {
+        verify(eachConsumer).accept(refEq(new ValueSupplyItem(name, supplier)));
     }
 }
