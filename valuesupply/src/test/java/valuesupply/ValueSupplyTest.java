@@ -1,6 +1,7 @@
 package valuesupply;
 
 import static org.mockito.Matchers.refEq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import java.util.Map;
@@ -18,8 +19,10 @@ import com.google.common.collect.ImmutableMap;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ValueSupplyTest {
-    private BasicValueSupplyCategory httpHeaderCategory;
-    private BasicValueSupplyCategory urlComponentCategory;
+    private ValueSupplyCategory httpHeaderCategory;
+    private ValueSupplyCategory urlComponentCategory;
+    private ValueSupplyCategory pendingResolutionCategory;
+
     private ValueSupply valueSupply;
     private String arrivalName;
     private String departureName;
@@ -28,6 +31,12 @@ public class ValueSupplyTest {
     private Supplier<Object> helloSupplier;
     private Supplier<Object> onTheWaySupplier;
     private Supplier<Object> goodbyeSupplier;
+
+    @Mock
+    private Supplier<Object> resolvedSupplier;
+
+    @Mock
+    private Supplier<Object> toBeReplacedSupplier;
 
     @Mock
     private Consumer<Map<String, Object>> allConsumer;
@@ -44,6 +53,7 @@ public class ValueSupplyTest {
 
         httpHeaderCategory = new BasicValueSupplyCategory("http-header");
         urlComponentCategory = new BasicValueSupplyCategory("url-component");
+        pendingResolutionCategory = new BasicValueSupplyCategory("toBeResolved");
 
         helloSupplier = new KnownValueSupplier("hello");
         onTheWaySupplier = new KnownValueSupplier("onTheWay");
@@ -68,5 +78,26 @@ public class ValueSupplyTest {
 
         verify(eachConsumer).accept(refEq(new ValueSupplyItem(arrivalName, helloSupplier)));
         verify(eachConsumer).accept(refEq(new ValueSupplyItem(approachingName, onTheWaySupplier)));
+    }
+
+    @Test
+    public void allowsForPendingSuppliers() {
+        valueSupply.pend(pendingResolutionCategory, "pending");
+        valueSupply.resolvePending(pendingResolutionCategory, "pending", resolvedSupplier);
+        valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
+
+        verify(eachConsumer).accept(refEq(new ValueSupplyItem("pending", resolvedSupplier)));
+    }
+
+    @Test
+    public void replacesPreviousPendingSupplier() {
+        valueSupply.pend(pendingResolutionCategory, "pending");
+        valueSupply.resolvePending(pendingResolutionCategory, "pending", toBeReplacedSupplier);
+        valueSupply.resolvePending(pendingResolutionCategory, "pending", resolvedSupplier);
+
+        valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
+
+        verify(eachConsumer).accept(refEq(new ValueSupplyItem("pending", resolvedSupplier)));
+        verify(eachConsumer, never()).accept(refEq(new ValueSupplyItem("pending", toBeReplacedSupplier)));
     }
 }
