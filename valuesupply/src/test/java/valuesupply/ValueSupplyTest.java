@@ -1,8 +1,6 @@
 package valuesupply;
 
-import static org.mockito.Matchers.refEq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 import java.util.Map;
 
@@ -44,9 +42,12 @@ public class ValueSupplyTest {
     @Mock
     private Consumer<ValueSupplyItem> eachConsumer;
 
+    @Mock
+    private SupplierFactory supplierFactory;
+
     @Before
     public void setUp() {
-        valueSupply = new ValueSupply();
+        valueSupply = new ValueSupply(supplierFactory);
         arrivalName = "arrival";
         departureName = "departure";
         approachingName = "approaching";
@@ -78,6 +79,28 @@ public class ValueSupplyTest {
 
         verify(eachConsumer).accept(refEq(new ValueSupplyItem(arrivalName, helloSupplier)));
         verify(eachConsumer).accept(refEq(new ValueSupplyItem(approachingName, onTheWaySupplier)));
+    }
+
+    @Test
+    public void resolvesSupplierBasedOnTypedParameter() throws Exception {
+        when(supplierFactory.create("LocalDate")).thenReturn(resolvedSupplier);
+
+        valueSupply.add(urlComponentCategory, "asOfDate:LocalDate");
+        valueSupply.supplyEachOf(urlComponentCategory, eachConsumer);
+
+        verify(eachConsumer).accept(refEq(new ValueSupplyItem("asOfDate:LocalDate", resolvedSupplier)));
+    }
+
+    @Test(expected=UnknownSupplierException.class)
+    public void rejectsAttemptsToAddUnresolvableSupplier() throws Exception {
+        when(supplierFactory.create("LocalDate")).thenThrow(new UnknownSupplierException());
+
+        valueSupply.add(urlComponentCategory, "asOfDate:LocalDate");
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void rejectsAttemptsToAddUntypedName() throws Exception {
+        valueSupply.add(urlComponentCategory, "asOfDate");
     }
 
     @Test

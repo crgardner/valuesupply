@@ -11,11 +11,18 @@ import org.junit.*;
 import valuesupply.*;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.common.base.Supplier;
 
 public class RestClientTest {
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().port(8089));
+
+    private SupplierFactory supplierFactory = new SupplierFactory() {
+        @Override public Supplier<Object> create(String type) {
+            return null;
+        }
+    };
 
     private ValueSupply valueSupply;
     private String endpoint;
@@ -42,7 +49,7 @@ public class RestClientTest {
     }
 
     private void prepareValueSupply() {
-        valueSupply = new ValueSupply();
+        valueSupply = new ValueSupply(supplierFactory);
 
         valueSupply.add(StandardValueSupplyCategory.MEDIA_TYPE, "Content-Type", new KnownValueSupplier(MediaType.APPLICATION_JSON));
         valueSupply.add(StandardValueSupplyCategory.HTTP_HEADER, "userName", new KnownValueSupplier(userNameHeaderValue));
