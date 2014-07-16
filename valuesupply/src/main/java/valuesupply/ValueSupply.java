@@ -5,6 +5,7 @@ import java.util.Map;
 
 import util.function.Consumer;
 
+import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Maps;
@@ -20,16 +21,16 @@ public class ValueSupply {
     }
 
     public void supplyAllOf(ValueSupplyCategory category, Consumer<Map<String, Object>> allConsumer) {
-        allConsumer.accept(altitemsWith(category));
+        allConsumer.accept(itemsWith(category));
     }
 
-    private Map<String, Object> altitemsWith(ValueSupplyCategory category) {
-        Map<String, ValueSupplyItem> row = suppliers.row(category);
+    private Map<String, Object> itemsWith(ValueSupplyCategory category) {
+        Map<String, ValueSupplyItem> categoryItemsByName = suppliers.row(category);
 
-        return Maps.transformEntries(row, new Maps.EntryTransformer<String, ValueSupplyItem, Object>() {
+        return Maps.transformValues(categoryItemsByName, new Function<ValueSupplyItem, Object>() {
 
             @Override
-            public Object transformEntry(String key, ValueSupplyItem value) {
+            public Object apply(ValueSupplyItem value) {
                 return value.valueAsString();
             }
         });
