@@ -30,8 +30,8 @@ public class ValueSupply {
         return Maps.transformValues(categoryItemsByName, new Function<ValueSupplyItem, Object>() {
 
             @Override
-            public Object apply(ValueSupplyItem value) {
-                return value.valueAsString();
+            public Object apply(ValueSupplyItem item) {
+                return item.valueAsString();
             }
         });
     }
