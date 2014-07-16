@@ -12,6 +12,7 @@ import valuesupply.*;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 public class RestClientTest {
 
@@ -51,9 +52,9 @@ public class RestClientTest {
     private void prepareValueSupply() {
         valueSupply = new ValueSupply(supplierFactory);
 
-        valueSupply.add(StandardValueSupplyCategory.MEDIA_TYPE, "Content-Type", new KnownValueSupplier(MediaType.APPLICATION_JSON));
-        valueSupply.add(StandardValueSupplyCategory.HTTP_HEADER, "userName", new KnownValueSupplier(userNameHeaderValue));
-        valueSupply.add(StandardValueSupplyCategory.URL_COMPONENT, "companyName", new KnownValueSupplier(companyNameComponentValue));
+        valueSupply.add(StandardValueSupplyCategory.MEDIA_TYPE, "Content-Type", Suppliers.<Object>ofInstance((MediaType.APPLICATION_JSON)));
+        valueSupply.add(StandardValueSupplyCategory.HTTP_HEADER, "userName", Suppliers.<Object>ofInstance((userNameHeaderValue)));
+        valueSupply.add(StandardValueSupplyCategory.URL_COMPONENT, "companyName", Suppliers.<Object>ofInstance((companyNameComponentValue)));
     }
 
     private void prepareRestClient() {

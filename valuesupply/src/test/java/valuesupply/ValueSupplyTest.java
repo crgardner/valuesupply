@@ -13,6 +13,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import util.function.Consumer;
 
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -34,9 +35,14 @@ public class ValueSupplyTest {
     private Supplier<Object> resolvedSupplier;
     private Supplier<Object> toBeReplacedSupplier;
 
-    @Mock private Consumer<Map<String, Object>> allConsumer;
-    @Mock private Consumer<ValueSupplyItem> eachConsumer;
-    @Mock private SupplierFactory supplierFactory;
+    @Mock
+    private Consumer<Map<String, Object>> allConsumer;
+
+    @Mock
+    private Consumer<ValueSupplyItem> eachConsumer;
+
+    @Mock
+    private SupplierFactory supplierFactory;
 
     @Before
     public void setUp() {
@@ -50,11 +56,11 @@ public class ValueSupplyTest {
         urlComponentCategory = new BasicValueSupplyCategory("url-component");
         pendingResolutionCategory = new BasicValueSupplyCategory("toBeResolved");
 
-        helloSupplier = new KnownValueSupplier("hello");
-        enRouteSupplier = new KnownValueSupplier("onTheWay");
-        goodbyeSupplier = new KnownValueSupplier("goodbye");
-        resolvedSupplier = new KnownValueSupplier("resolved");
-        toBeReplacedSupplier = new KnownValueSupplier("toBeReplaced");
+        helloSupplier = Suppliers.<Object> ofInstance("hello");
+        enRouteSupplier = Suppliers.<Object> ofInstance("onTheWay");
+        goodbyeSupplier = Suppliers.<Object> ofInstance("goodbye");
+        resolvedSupplier = Suppliers.<Object> ofInstance("resolved");
+        toBeReplacedSupplier = Suppliers.<Object> ofInstance("toBeReplaced");
 
         valueSupply.add(httpHeaderCategory, helloName, helloSupplier);
         valueSupply.add(httpHeaderCategory, enRouteName, enRouteSupplier);
@@ -65,8 +71,9 @@ public class ValueSupplyTest {
     public void suppliesAllOfSpecifiedCategory() {
         valueSupply.supplyAllOf(httpHeaderCategory, allConsumer);
 
-        verify(allConsumer).accept(ImmutableMap.<String, Object>of(helloName, helloSupplier.get(),
-                                                                   enRouteName, enRouteSupplier.get()));
+        verify(allConsumer).accept(
+                ImmutableMap.<String, Object> of(helloName, helloSupplier.get(), enRouteName,
+                        enRouteSupplier.get()));
     }
 
     @Test
@@ -87,14 +94,14 @@ public class ValueSupplyTest {
         verifyConsumerAcceptsValueSupplyItemOf("asOfDate:LocalDate", resolvedSupplier);
     }
 
-    @Test(expected=UnknownSupplierException.class)
+    @Test(expected = UnknownSupplierException.class)
     public void rejectsAttemptsToAddUnresolvableSupplier() throws Exception {
         when(supplierFactory.create("LocalDate")).thenThrow(new UnknownSupplierException());
 
         valueSupply.add(urlComponentCategory, "asOfDate:LocalDate");
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void rejectsAttemptsToAddUntypedName() throws Exception {
         valueSupply.add(urlComponentCategory, "asOfDate");
     }
@@ -117,7 +124,8 @@ public class ValueSupplyTest {
         valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
 
         verifyConsumerAcceptsValueSupplyItemOf(pendingName, resolvedSupplier);
-        verify(eachConsumer, never()).accept(refEq(new ValueSupplyItem(pendingName, toBeReplacedSupplier)));
+        verify(eachConsumer, never()).accept(
+                refEq(new ValueSupplyItem(pendingName, toBeReplacedSupplier)));
     }
 
     private void verifyConsumerAcceptsValueSupplyItemOf(String name, Supplier<Object> supplier) {
