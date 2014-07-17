@@ -1,6 +1,7 @@
 package valuesupply;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -66,13 +67,15 @@ public class ValueSupply {
     }
 
     public void resolvePending(Function<String, Optional<Supplier<Object>>> supplierResolver) {
-        for (Entry<String, ValueSupplyCategory> pending : pendingSuppliers.entrySet()) {
+        for (Iterator<Entry<String, ValueSupplyCategory>> iterator = pendingSuppliers.entrySet().iterator(); iterator.hasNext();) {
+            Entry<String, ValueSupplyCategory> pending = iterator.next();
             Optional<Supplier<Object>> supplierCandidate = supplierResolver.apply(pending.getKey());
 
             if (supplierCandidate.isPresent()) {
                 add(pending.getValue(), pending.getKey(), supplierCandidate.get());
-                pendingSuppliers.remove(pending.getKey());
+                iterator.remove();
             }
         }
+
     }
 }

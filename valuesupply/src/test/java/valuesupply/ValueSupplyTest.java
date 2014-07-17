@@ -108,7 +108,7 @@ public class ValueSupplyTest {
     }
 
     @Test
-    public void offersResolutionOfPendingSuppliers() {
+    public void offersResolutionOfSinglePendingSupplier() {
         valueSupply.pend(pendingResolutionCategory, pendingName);
         valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
 
@@ -121,6 +121,25 @@ public class ValueSupplyTest {
         valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
 
         verifyConsumerAcceptsValueSupplyItemOf(pendingName, resolvedSupplier);
+    }
+
+    @Test
+    public void offersResolutionOfMultiplePendingSuppliers() {
+        valueSupply.pend(pendingResolutionCategory, pendingName);
+        valueSupply.pend(pendingResolutionCategory, "anotherPending");
+
+        valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
+
+            @Override
+            public Optional<Supplier<Object>> apply(String itemName) {
+                return Optional.of((itemName == pendingName) ? helloSupplier : goodbyeSupplier);
+            }
+        });
+
+        valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
+
+        verifyConsumerAcceptsValueSupplyItemOf(pendingName, helloSupplier);
+        verifyConsumerAcceptsValueSupplyItemOf("anotherPending", goodbyeSupplier);
     }
 
     @Test
@@ -138,7 +157,6 @@ public class ValueSupplyTest {
 
         verify(eachConsumer, never()).accept(any(ValueSupplyItem.class));
     }
-
 
     @Test
     public void ignoresReplacingPreviousPendingSupplier() {
