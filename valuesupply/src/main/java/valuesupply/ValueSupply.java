@@ -18,7 +18,6 @@ public class ValueSupply {
     private final Table<ValueSupplyCategory, String, ValueSupplyItem> suppliers = HashBasedTable.create();
     private final Map<String, ValueSupplyCategory> pendingSuppliers = new HashMap<>();
     private final SupplierFactory supplierFactory;
-    private Optional<Supplier<Object>> supplierCandidate;
 
     public ValueSupply(SupplierFactory supplierFactory) {
         this.supplierFactory = supplierFactory;
@@ -68,7 +67,7 @@ public class ValueSupply {
 
     public void resolvePending(Function<String, Optional<Supplier<Object>>> supplierResolver) {
         for (Entry<String, ValueSupplyCategory> pending : pendingSuppliers.entrySet()) {
-            supplierCandidate = supplierResolver.apply(pending.getKey());
+            Optional<Supplier<Object>> supplierCandidate = supplierResolver.apply(pending.getKey());
 
             if (supplierCandidate.isPresent()) {
                 add(pending.getValue(), pending.getKey(), supplierCandidate.get());

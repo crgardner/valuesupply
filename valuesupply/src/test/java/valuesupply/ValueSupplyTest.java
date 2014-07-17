@@ -73,9 +73,8 @@ public class ValueSupplyTest {
     public void suppliesAllOfSpecifiedCategory() {
         valueSupply.supplyAllOf(httpHeaderCategory, allConsumer);
 
-        verify(allConsumer).accept(
-                ImmutableMap.<String, Object> of(helloName, helloSupplier.get(), enRouteName,
-                        enRouteSupplier.get()));
+        verify(allConsumer).accept(aMapOf(helloName, helloSupplier.get(),
+                                          enRouteName, enRouteSupplier.get()));
     }
 
     @Test
@@ -96,14 +95,14 @@ public class ValueSupplyTest {
         verifyConsumerAcceptsValueSupplyItemOf("asOfDate:LocalDate", resolvedSupplier);
     }
 
-    @Test(expected = UnknownSupplierException.class)
+    @Test(expected=UnknownSupplierException.class)
     public void rejectsAttemptsToAddUnresolvableSupplier() throws Exception {
         when(supplierFactory.create("LocalDate")).thenThrow(new UnknownSupplierException());
 
         valueSupply.add(urlComponentCategory, "asOfDate:LocalDate");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected=IllegalArgumentException.class)
     public void rejectsAttemptsToAddUntypedName() throws Exception {
         valueSupply.add(urlComponentCategory, "asOfDate");
     }
@@ -166,6 +165,9 @@ public class ValueSupplyTest {
         verify(eachConsumer, never()).accept(refEq(new ValueSupplyItem(pendingName, resolvedSupplier)));
     }
 
+    private Map<String, Object> aMapOf(String key1, Object value1, String key2, Object value2) {
+        return ImmutableMap.<String, Object>of(key1, value1, key2, value2);
+    }
 
     private void verifyConsumerAcceptsValueSupplyItemOf(String name, Supplier<Object> supplier) {
         verify(eachConsumer).accept(refEq(new ValueSupplyItem(name, supplier)));
