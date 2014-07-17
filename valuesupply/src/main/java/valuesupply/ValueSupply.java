@@ -2,10 +2,12 @@ package valuesupply;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import util.function.Consumer;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashBasedTable;
@@ -14,15 +16,15 @@ import com.google.common.collect.Table;
 
 public class ValueSupply {
     private final Table<ValueSupplyCategory, String, ValueSupplyItem> suppliers = HashBasedTable.create();
-    private final Map<ValueSupplyCategory, String> pendingSuppliers = new HashMap<>();
+    private final Map<String, ValueSupplyCategory> pendingSuppliers = new HashMap<>();
     private final SupplierFactory supplierFactory;
+    private Optional<Supplier<Object>> supplierCandidate;
 
     public ValueSupply(SupplierFactory supplierFactory) {
         this.supplierFactory = supplierFactory;
     }
 
-    public void add(ValueSupplyCategory category, String name,
-            Supplier<Object> supplier) {
+    public void add(ValueSupplyCategory category, String name, Supplier<Object> supplier) {
         suppliers.put(category, name, new ValueSupplyItem(name, supplier));
     }
 
@@ -49,12 +51,7 @@ public class ValueSupply {
     }
 
     public void pend(ValueSupplyCategory pendingResolutionCategory, String name) {
-        pendingSuppliers.put(pendingResolutionCategory, name);
-    }
-
-    public void resolvePending(ValueSupplyCategory category, String name,
-            Supplier<Object> resolvedSupplier) {
-        add(category, pendingSuppliers.get(category), resolvedSupplier);
+        pendingSuppliers.put(name, pendingResolutionCategory);
     }
 
     public void add(ValueSupplyCategory category, String nameWithTypeIndicator) throws UnknownSupplierException {
@@ -67,5 +64,16 @@ public class ValueSupply {
         String[] components = nameWithTypeIndicator.split(":");
         Preconditions.checkArgument(components.length == 2);
         return components[1];
+    }
+
+    public void resolvePending(Function<String, Optional<Supplier<Object>>> supplierResolver) {
+        for (Entry<String, ValueSupplyCategory> pending : pendingSuppliers.entrySet()) {
+            supplierCandidate = supplierResolver.apply(pending.getKey());
+
+            if (supplierCandidate.isPresent()) {
+                add(pending.getValue(), pending.getKey(), supplierCandidate.get());
+                pendingSuppliers.remove(pending.getKey());
+            }
+        }
     }
 }

@@ -12,6 +12,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import util.function.Consumer;
 
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
@@ -107,26 +109,63 @@ public class ValueSupplyTest {
     }
 
     @Test
-    public void allowsForPendingSuppliers() {
+    public void offersResolutionOfPendingSuppliers() {
         valueSupply.pend(pendingResolutionCategory, pendingName);
-        valueSupply.resolvePending(pendingResolutionCategory, pendingName, resolvedSupplier);
+        valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
+
+            @Override
+            public Optional<Supplier<Object>> apply(String itemName) {
+                return Optional.of(resolvedSupplier);
+            }
+        });
+
         valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
 
         verifyConsumerAcceptsValueSupplyItemOf(pendingName, resolvedSupplier);
     }
 
     @Test
-    public void replacesPreviousPendingSupplier() {
+    public void ignoresUnresolvedPendingSuppliers() {
         valueSupply.pend(pendingResolutionCategory, pendingName);
-        valueSupply.resolvePending(pendingResolutionCategory, pendingName, toBeReplacedSupplier);
-        valueSupply.resolvePending(pendingResolutionCategory, pendingName, resolvedSupplier);
+        valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
+
+            @Override
+            public Optional<Supplier<Object>> apply(String itemName) {
+                return Optional.absent();
+            }
+        });
 
         valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
 
-        verifyConsumerAcceptsValueSupplyItemOf(pendingName, resolvedSupplier);
-        verify(eachConsumer, never()).accept(
-                refEq(new ValueSupplyItem(pendingName, toBeReplacedSupplier)));
+        verify(eachConsumer, never()).accept(any(ValueSupplyItem.class));
     }
+
+
+    @Test
+    public void ignoresReplacingPreviousPendingSupplier() {
+        valueSupply.pend(pendingResolutionCategory, pendingName);
+        valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
+
+            @Override
+            public Optional<Supplier<Object>> apply(String itemName) {
+                return Optional.of(toBeReplacedSupplier);
+            }
+        });
+
+        valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
+
+            @Override
+            public Optional<Supplier<Object>> apply(String itemName) {
+                return Optional.of(resolvedSupplier);
+            }
+        });
+
+        valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
+
+        verifyConsumerAcceptsValueSupplyItemOf(pendingName, toBeReplacedSupplier);
+        verify(eachConsumer, never()).accept(refEq(new ValueSupplyItem(pendingName, resolvedSupplier)));
+    }
+
 
     private void verifyConsumerAcceptsValueSupplyItemOf(String name, Supplier<Object> supplier) {
         verify(eachConsumer).accept(refEq(new ValueSupplyItem(name, supplier)));
