@@ -86,30 +86,36 @@ public class ValueSupplyTest {
     }
 
     @Test
-    public void resolvesSupplierBasedOnTypedParameter() throws Exception {
-        when(supplierFactory.create("LocalDate")).thenReturn(resolvedSupplier);
+    public void addsNewItemBasedOnDescriptor() throws Exception {
+        when(supplierFactory.create(StandardValueType.LocalDate)).thenReturn(resolvedSupplier);
 
-        valueSupply.add(urlComponentCategory, "asOfDate:LocalDate");
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(urlComponentCategory,
+                                                                 "asOfDate", StandardValueType.LocalDate));
         valueSupply.supplyEachOf(urlComponentCategory, eachConsumer);
 
-        verifyConsumerAcceptsValueSupplyItemOf("asOfDate:LocalDate", resolvedSupplier);
+        verifyConsumerAcceptsValueSupplyItemOf("asOfDate", resolvedSupplier);
+    }
+
+    @Test
+    public void addsToPendingWhenDescriptorIndicatesResolutionIsRequired() throws Exception {
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory,
+                                                                 pendingName, StandardValueType.String));
+        valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
+
+        verify(eachConsumer, never()).accept(any(ValueSupplyItem.class));
     }
 
     @Test(expected=UnknownSupplierException.class)
     public void rejectsAttemptsToAddUnresolvableSupplier() throws Exception {
-        when(supplierFactory.create("LocalDate")).thenThrow(new UnknownSupplierException());
+        when(supplierFactory.create(StandardValueType.LocalDate)).thenThrow(new UnknownSupplierException());
 
-        valueSupply.add(urlComponentCategory, "asOfDate:LocalDate");
-    }
-
-    @Test(expected=IllegalArgumentException.class)
-    public void rejectsAttemptsToAddUntypedName() throws Exception {
-        valueSupply.add(urlComponentCategory, "asOfDate");
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(urlComponentCategory,
+                                                                 "asOfDate", StandardValueType.LocalDate));
     }
 
     @Test
-    public void offersResolutionOfSinglePendingSupplier() {
-        valueSupply.pend(pendingResolutionCategory, pendingName);
+    public void offersResolutionOfSinglePendingSupplier() throws Exception {
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory, pendingName, StandardValueType.String));
         valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
 
             @Override
@@ -124,9 +130,9 @@ public class ValueSupplyTest {
     }
 
     @Test
-    public void offersResolutionOfMultiplePendingSuppliers() {
-        valueSupply.pend(pendingResolutionCategory, pendingName);
-        valueSupply.pend(pendingResolutionCategory, "anotherPending");
+    public void offersResolutionOfMultiplePendingSuppliers() throws Exception {
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory, pendingName, StandardValueType.String));
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory, "anotherPending", StandardValueType.String));
 
         valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
 
@@ -143,8 +149,8 @@ public class ValueSupplyTest {
     }
 
     @Test
-    public void ignoresUnresolvedPendingSuppliers() {
-        valueSupply.pend(pendingResolutionCategory, pendingName);
+    public void ignoresUnresolvedPendingSuppliers() throws Exception {
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory, pendingName, StandardValueType.String));
         valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
 
             @Override
@@ -159,8 +165,8 @@ public class ValueSupplyTest {
     }
 
     @Test
-    public void ignoresReplacingPreviousPendingSupplier() {
-        valueSupply.pend(pendingResolutionCategory, pendingName);
+    public void ignoresReplacingPreviousPendingSupplier() throws Exception {
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory, pendingName, StandardValueType.String));
         valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
 
             @Override

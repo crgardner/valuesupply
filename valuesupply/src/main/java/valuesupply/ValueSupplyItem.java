@@ -24,4 +24,11 @@ public class ValueSupplyItem {
         return value().toString();
     }
 
+    @Override
+    public String toString() {
+        return com.google.common.base.Objects.toStringHelper(this).add("name", name)
+                                                                  .toString();
+    }
+
+
 }

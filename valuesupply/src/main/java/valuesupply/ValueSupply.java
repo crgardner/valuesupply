@@ -9,7 +9,6 @@ import util.function.Consumer;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Maps;
@@ -26,6 +25,22 @@ public class ValueSupply {
 
     public void add(ValueSupplyCategory category, String name, Supplier<Object> supplier) {
         suppliers.put(category, name, new ValueSupplyItem(name, supplier));
+    }
+
+    public void addItemBasedOn(ValueSupplyItemDescriptor descriptor) throws UnknownSupplierException {
+        if (descriptor.isResolutionRequired()) {
+            pend(descriptor.getValueSupplyCategory(), descriptor.getName());
+            return;
+        }
+
+        Supplier<Object> supplier = supplierFactory.create(descriptor.getValueType());
+
+        add(descriptor.getValueSupplyCategory(), descriptor.getName(), supplier);
+
+    }
+
+    private void pend(ValueSupplyCategory pendingResolutionCategory, String name) {
+        pendingSuppliers.put(name, pendingResolutionCategory);
     }
 
     public void supplyAllOf(ValueSupplyCategory category, Consumer<Map<String, Object>> allConsumer) {
@@ -48,22 +63,6 @@ public class ValueSupply {
         for (ValueSupplyItem valueSupplyItem : suppliers.row(category).values()) {
             eachConsumer.accept(valueSupplyItem);
         }
-    }
-
-    public void pend(ValueSupplyCategory pendingResolutionCategory, String name) {
-        pendingSuppliers.put(name, pendingResolutionCategory);
-    }
-
-    public void add(ValueSupplyCategory category, String nameWithTypeIndicator) throws UnknownSupplierException {
-        Supplier<Object> supplier = supplierFactory.create(resolveSupplierTypeName(nameWithTypeIndicator));
-
-        add(category, nameWithTypeIndicator, supplier);
-    }
-
-    private String resolveSupplierTypeName(String nameWithTypeIndicator) {
-        String[] components = nameWithTypeIndicator.split(":");
-        Preconditions.checkArgument(components.length == 2);
-        return components[1];
     }
 
     public void resolvePending(Function<String, Optional<Supplier<Object>>> supplierResolver) {
