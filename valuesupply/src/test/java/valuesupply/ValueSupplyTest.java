@@ -22,20 +22,16 @@ import com.google.common.collect.ImmutableMap;
 public class ValueSupplyTest {
     private ValueSupplyCategory httpHeaderCategory;
     private ValueSupplyCategory urlComponentCategory;
-    private ValueSupplyCategory pendingResolutionCategory;
 
     private ValueSupply valueSupply;
 
     private String helloName;
-    private String goodbyeName;
     private String enRouteName;
-    private String pendingName;
+    private String goodbyeName;
 
     private Supplier<Object> helloSupplier;
     private Supplier<Object> enRouteSupplier;
     private Supplier<Object> goodbyeSupplier;
-    private Supplier<Object> resolvedSupplier;
-    private Supplier<Object> toBeReplacedSupplier;
 
     @Mock
     private Consumer<Map<String, Object>> allConsumer;
@@ -50,27 +46,24 @@ public class ValueSupplyTest {
     public void setUp() {
         valueSupply = new ValueSupply(supplierFactory);
         helloName = "hello";
-        goodbyeName = "goodbye";
         enRouteName = "enRoute";
-        pendingName = "pending";
+        goodbyeName = "goodbye";
 
         httpHeaderCategory = new BasicValueSupplyCategory("http-header");
         urlComponentCategory = new BasicValueSupplyCategory("url-component");
-        pendingResolutionCategory = new BasicValueSupplyCategory("toBeResolved");
 
         helloSupplier = Suppliers.<Object> ofInstance("hello");
         enRouteSupplier = Suppliers.<Object> ofInstance("onTheWay");
         goodbyeSupplier = Suppliers.<Object> ofInstance("goodbye");
-        resolvedSupplier = Suppliers.<Object> ofInstance("resolved");
-        toBeReplacedSupplier = Suppliers.<Object> ofInstance("toBeReplaced");
-
-        valueSupply.add(httpHeaderCategory, helloName, helloSupplier);
-        valueSupply.add(httpHeaderCategory, enRouteName, enRouteSupplier);
-        valueSupply.add(urlComponentCategory, goodbyeName, goodbyeSupplier);
     }
 
     @Test
-    public void suppliesAllOfSpecifiedCategory() {
+    public void suppliesAllOfSpecifiedCategory() throws Exception {
+        havingASupplierFactoryWithAllKnownSuppliers();
+
+        valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, helloName));
+        valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, enRouteName));
+
         valueSupply.supplyAllOf(httpHeaderCategory, allConsumer);
 
         verify(allConsumer).accept(aMapOf(helloName, helloSupplier.get(),
@@ -78,7 +71,12 @@ public class ValueSupplyTest {
     }
 
     @Test
-    public void suppliesEachOfSpecifiedCategory() {
+    public void suppliesEachOfSpecifiedCategory() throws Exception {
+        havingASupplierFactoryWithAllKnownSuppliers();
+
+        valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, helloName));
+        valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, enRouteName));
+
         valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
         verifyConsumerAcceptsValueSupplyItemOf(helloName, helloSupplier);
@@ -86,71 +84,79 @@ public class ValueSupplyTest {
     }
 
     @Test
-    public void addsNewItemBasedOnDescriptor() throws Exception {
-        when(supplierFactory.create(StandardValueType.LocalDate)).thenReturn(resolvedSupplier);
-
-        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(urlComponentCategory,
-                                                                 "asOfDate", StandardValueType.LocalDate));
-        valueSupply.supplyEachOf(urlComponentCategory, eachConsumer);
-
-        verifyConsumerAcceptsValueSupplyItemOf("asOfDate", resolvedSupplier);
-    }
-
-    @Test
     public void addsToPendingWhenDescriptorIndicatesResolutionIsRequired() throws Exception {
-        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory,
-                                                                 pendingName, StandardValueType.String));
-        valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
+        valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
+
+        valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
         verify(eachConsumer, never()).accept(any(ValueSupplyItem.class));
     }
 
     @Test(expected=UnknownSupplierException.class)
     public void rejectsAttemptsToAddUnresolvableSupplier() throws Exception {
-        when(supplierFactory.create(StandardValueType.LocalDate)).thenThrow(new UnknownSupplierException());
+        when(supplierFactory.create(any(ValueSupplyItemDescriptor.class))).thenThrow(new UnknownSupplierException());
 
-        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(urlComponentCategory,
-                                                                 "asOfDate", StandardValueType.LocalDate));
+        valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(urlComponentCategory, "asOfDate", StandardValueType.LocalDate));
     }
 
     @Test
     public void offersResolutionOfSinglePendingSupplier() throws Exception {
-        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory, pendingName, StandardValueType.String));
+        valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
+
         valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
 
             @Override
             public Optional<Supplier<Object>> apply(String itemName) {
-                return Optional.of(resolvedSupplier);
+                return Optional.of(helloSupplier);
             }
         });
 
-        valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
+        valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
-        verifyConsumerAcceptsValueSupplyItemOf(pendingName, resolvedSupplier);
+        verifyConsumerAcceptsValueSupplyItemOf(helloName, helloSupplier);
+    }
+
+    @Test
+    public void ensuresResolvedItemsAreNoLongerPending() throws Exception {
+        Function<String, Optional<Supplier<Object>>> supplierResolver = spy(new Function<String, Optional<Supplier<Object>>>() {
+
+            @Override
+            public Optional<Supplier<Object>> apply(String itemName) {
+                return Optional.of(helloSupplier);
+            }
+        });
+
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
+
+        valueSupply.resolvePending(supplierResolver);
+        valueSupply.resolvePending(supplierResolver);
+
+        verify(supplierResolver, times(1)).apply(helloName);
     }
 
     @Test
     public void offersResolutionOfMultiplePendingSuppliers() throws Exception {
-        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory, pendingName, StandardValueType.String));
-        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory, "anotherPending", StandardValueType.String));
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(httpHeaderCategory, goodbyeName, StandardValueType.String));
 
         valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
 
             @Override
             public Optional<Supplier<Object>> apply(String itemName) {
-                return Optional.of((itemName == pendingName) ? helloSupplier : goodbyeSupplier);
+                return Optional.of((itemName == helloName) ? helloSupplier : goodbyeSupplier);
             }
         });
 
-        valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
+        valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
-        verifyConsumerAcceptsValueSupplyItemOf(pendingName, helloSupplier);
-        verifyConsumerAcceptsValueSupplyItemOf("anotherPending", goodbyeSupplier);
+        verifyConsumerAcceptsValueSupplyItemOf(helloName, helloSupplier);
+        verifyConsumerAcceptsValueSupplyItemOf(goodbyeName, goodbyeSupplier);
     }
 
     @Test
     public void ignoresUnresolvedPendingSuppliers() throws Exception {
-        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory, pendingName, StandardValueType.String));
+        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
+
         valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
 
             @Override
@@ -159,34 +165,9 @@ public class ValueSupplyTest {
             }
         });
 
-        valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
+        valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
         verify(eachConsumer, never()).accept(any(ValueSupplyItem.class));
-    }
-
-    @Test
-    public void ignoresReplacingPreviousPendingSupplier() throws Exception {
-        valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(pendingResolutionCategory, pendingName, StandardValueType.String));
-        valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
-
-            @Override
-            public Optional<Supplier<Object>> apply(String itemName) {
-                return Optional.of(toBeReplacedSupplier);
-            }
-        });
-
-        valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
-
-            @Override
-            public Optional<Supplier<Object>> apply(String itemName) {
-                return Optional.of(resolvedSupplier);
-            }
-        });
-
-        valueSupply.supplyEachOf(pendingResolutionCategory, eachConsumer);
-
-        verifyConsumerAcceptsValueSupplyItemOf(pendingName, toBeReplacedSupplier);
-        verify(eachConsumer, never()).accept(refEq(new ValueSupplyItem(pendingName, resolvedSupplier)));
     }
 
     private Map<String, Object> aMapOf(String key1, Object value1, String key2, Object value2) {
@@ -195,5 +176,19 @@ public class ValueSupplyTest {
 
     private void verifyConsumerAcceptsValueSupplyItemOf(String name, Supplier<Object> supplier) {
         verify(eachConsumer).accept(refEq(new ValueSupplyItem(name, supplier)));
+    }
+
+    private void havingASupplierFactoryWithAllKnownSuppliers() throws UnknownSupplierException {
+        when(supplierFactory.create(any(ValueSupplyItemDescriptor.class))).thenReturn(helloSupplier).thenReturn(enRouteSupplier);
+    }
+
+    private ValueSupplyItemDescriptor aValueSupplyItemDescriptor(
+            ValueSupplyCategory valueSupplyCategory, String name, ValueType valueType) {
+        return new ValueSupplyItemDescriptor(valueSupplyCategory, name, valueType);
+    }
+
+    private ValueSupplyItemDescriptor aResolvableValueSupplyDescriptor(
+            ValueSupplyCategory valueSupplyCategory, String name) {
+        return new ValueSupplyItemDescriptor(valueSupplyCategory, name, StandardValueType.String, "placeholder");
     }
 }

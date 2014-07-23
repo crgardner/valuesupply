@@ -20,7 +20,8 @@ public class RestClientTest {
     public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().port(8089));
 
     private SupplierFactory supplierFactory = new SupplierFactory() {
-        @Override public Supplier<Object> create(ValueType valueType) {
+        @Override public Supplier<Object> create(ValueSupplyItemDescriptor valueSupplyItemDescriptor)
+                throws UnknownSupplierException {
             return null;
         }
     };

@@ -4,6 +4,6 @@ import com.google.common.base.Supplier;
 
 public interface SupplierFactory {
 
-    Supplier<Object> create(ValueType valueType) throws UnknownSupplierException;
+    Supplier<Object> create(ValueSupplyItemDescriptor valueSupplyItemDescriptor) throws UnknownSupplierException;
 
 }
