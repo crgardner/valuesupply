@@ -3,28 +3,25 @@ package example;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import javax.ws.rs.core.MediaType;
 
 import org.junit.*;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import valuesupply.*;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 
+@RunWith(MockitoJUnitRunner.class)
 public class RestClientTest {
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().port(8089));
-
-    private SupplierFactory supplierFactory = new SupplierFactory() {
-        @Override public Supplier<Object> create(ValueSupplyItemDescriptor valueSupplyItemDescriptor)
-                throws UnknownSupplierException {
-            return null;
-        }
-    };
 
     private ValueSupply valueSupply;
     private String endpoint;
@@ -36,12 +33,23 @@ public class RestClientTest {
     private String userNameHeaderValue;
     private String companyNameComponentValue;
 
+    @Mock
+    private SupplierFactory supplierFactory;
+
+    private ValueSupplyItemDescriptor contentTypeDescriptor;
+
+    private ValueSupplyItemDescriptor userNameDescriptor;
+
+    private ValueSupplyItemDescriptor companyNameDescriptor;
+
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         prepareRequestAspects();
+        prepareValueSupplyItemDescriptors();
         prepareValueSupply();
         prepareRestClient();
     }
+
 
     private void prepareRequestAspects() {
         endpoint = "http://localhost:8089";
@@ -50,12 +58,22 @@ public class RestClientTest {
         companyNameComponentValue = "ACME";
     }
 
-    private void prepareValueSupply() {
+    private void prepareValueSupplyItemDescriptors() {
+        contentTypeDescriptor = new ValueSupplyItemDescriptor(StandardValueSupplyCategory.HTTP_HEADER, "Accept", StandardValueType.String, MediaType.APPLICATION_JSON.toString());
+        userNameDescriptor = new ValueSupplyItemDescriptor(StandardValueSupplyCategory.HTTP_HEADER, "userName", StandardValueType.String, userNameHeaderValue);
+        companyNameDescriptor = new ValueSupplyItemDescriptor(StandardValueSupplyCategory.URL_COMPONENT, "companyName", StandardValueType.String, companyNameComponentValue);
+
+    }
+    private void prepareValueSupply() throws Exception {
         valueSupply = new ValueSupply(supplierFactory);
 
-        valueSupply.add(StandardValueSupplyCategory.MEDIA_TYPE, "Content-Type", Suppliers.<Object>ofInstance((MediaType.APPLICATION_JSON)));
-        valueSupply.add(StandardValueSupplyCategory.HTTP_HEADER, "userName", Suppliers.<Object>ofInstance((userNameHeaderValue)));
-        valueSupply.add(StandardValueSupplyCategory.URL_COMPONENT, "companyName", Suppliers.<Object>ofInstance((companyNameComponentValue)));
+        when(supplierFactory.create(contentTypeDescriptor)).thenReturn(Suppliers.<Object>ofInstance((MediaType.APPLICATION_JSON)));
+        when(supplierFactory.create(userNameDescriptor)).thenReturn(Suppliers.<Object>ofInstance(userNameHeaderValue));
+        when(supplierFactory.create(companyNameDescriptor)).thenReturn(Suppliers.<Object>ofInstance(companyNameComponentValue));
+
+        valueSupply.addItemBasedOn(companyNameDescriptor);
+        valueSupply.addItemBasedOn(contentTypeDescriptor);
+        valueSupply.addItemBasedOn(userNameDescriptor);
     }
 
     private void prepareRestClient() {
@@ -64,6 +82,7 @@ public class RestClientTest {
 
     @Test
     public void preparesCallBasedOnValueSuppliers() throws Exception {
+
         expandedResource = "/v1/providers/ACME/exports";
         response = "[{'export': 'cigars'}, {'export': 'scotch'}]";
 
