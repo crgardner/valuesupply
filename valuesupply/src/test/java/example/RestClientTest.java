@@ -59,7 +59,7 @@ public class RestClientTest {
     }
 
     private void prepareValueSupplyItemDescriptors() {
-        contentTypeDescriptor = new ValueSupplyItemDescriptor(StandardValueSupplyCategory.HTTP_HEADER, "Accept", StandardValueType.String, MediaType.APPLICATION_JSON.toString());
+        contentTypeDescriptor = new ValueSupplyItemDescriptor(StandardValueSupplyCategory.HTTP_HEADER, "Accept", StandardValueType.String, MediaType.APPLICATION_JSON);
         userNameDescriptor = new ValueSupplyItemDescriptor(StandardValueSupplyCategory.HTTP_HEADER, "userName", StandardValueType.String, userNameHeaderValue);
         companyNameDescriptor = new ValueSupplyItemDescriptor(StandardValueSupplyCategory.URL_COMPONENT, "companyName", StandardValueType.String, companyNameComponentValue);
 
