@@ -100,13 +100,29 @@ public class ValueSupplyTest {
     }
 
     @Test
-    public void offersResolutionOfSinglePendingSupplier() throws Exception {
+    public void offersResolutionOfSinglePendingSupplier_legacy() throws Exception {
         valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
 
         valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
 
             @Override
             public Optional<Supplier<Object>> apply(String itemName) {
+                return Optional.of(helloSupplier);
+            }
+        });
+
+        valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
+
+        verifyConsumerAcceptsValueSupplyItemOf(helloName, helloSupplier);
+    }
+
+    @Test
+    public void offersResolutionOfSinglePendingSupplier() throws Exception {
+        valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
+
+        valueSupply.resolvePending(new AltSupplierFactory() {
+            @Override
+            public Optional<Supplier<Object>> create(String name, ValueType valueType, String potentialDefaultValue) {
                 return Optional.of(helloSupplier);
             }
         });

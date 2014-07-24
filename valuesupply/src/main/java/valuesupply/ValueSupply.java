@@ -77,4 +77,18 @@ public class ValueSupply {
         }
 
     }
+
+    public void resolvePending(AltSupplierFactory supplierFactory) {
+        for (Iterator<Entry<String, ValueSupplyCategory>> iterator = pendingSuppliers.entrySet().iterator(); iterator.hasNext();) {
+            Entry<String, ValueSupplyCategory> pending = iterator.next();
+            Optional<Supplier<Object>> supplierCandidate = supplierFactory.create(pending.getKey(), StandardValueType.String, "");
+
+            if (supplierCandidate.isPresent()) {
+                add(pending.getValue(), pending.getKey(), supplierCandidate.get());
+                iterator.remove();
+            }
+        }
+
+
+    }
 }
