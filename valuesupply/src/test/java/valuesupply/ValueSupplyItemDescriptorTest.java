@@ -1,7 +1,7 @@
 package valuesupply;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static valuesupply.StandardValueSupplyCategory.HTTP_HEADER;
+import static org.assertj.core.api.Assertions.*;
+import static valuesupply.StandardValueSupplyCategory.*;
 
 import org.junit.Test;
 

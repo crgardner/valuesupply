@@ -1,47 +1,41 @@
 package valuesupply;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.*;
 
 import util.function.Consumer;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Table;
+import com.google.common.base.*;
+import com.google.common.collect.*;
 
 public class ValueSupply {
     private final Table<ValueSupplyCategory, String, ValueSupplyItem> suppliers = HashBasedTable.create();
-    private final Map<String, ValueSupplyCategory> pendingSuppliers = new HashMap<>();
-    private final SupplierFactory supplierFactory;
+    private final Set<ValueSupplyItemDescriptor> pendingSuppliers = new HashSet<>();
+    private final SupplierFactory knownSupplierFactory;
 
-    public ValueSupply(SupplierFactory supplierFactory) {
-        this.supplierFactory = supplierFactory;
+    public ValueSupply(SupplierFactory knownSupplierFactory) {
+        this.knownSupplierFactory = knownSupplierFactory;
     }
 
-    public void add(ValueSupplyCategory category, String name, Supplier<Object> supplier) {
-        suppliers.put(category, name, new ValueSupplyItem(name, supplier));
-    }
-
-    public void addItemBasedOn(ValueSupplyItemDescriptor descriptor) throws UnknownSupplierException {
+    public void addItemBasedOn(ValueSupplyItemDescriptor descriptor)
+            throws UnknownSupplierException {
         if (descriptor.isResolutionRequired()) {
-            pend(descriptor.getValueSupplyCategory(), descriptor.getName());
+            pendingSuppliers.add(descriptor);
             return;
         }
 
-        Supplier<Object> supplier = supplierFactory.create(descriptor);
+        Optional<Supplier<Object>> optionalSupplier = knownSupplierFactory.createFrom(descriptor);
 
-        add(descriptor.getValueSupplyCategory(), descriptor.getName(), supplier);
+        if (!optionalSupplier.isPresent()) {
+            throw new UnknownSupplierException();
+        }
 
+        add(descriptor, optionalSupplier.get());
     }
 
-    private void pend(ValueSupplyCategory pendingResolutionCategory, String name) {
-        pendingSuppliers.put(name, pendingResolutionCategory);
+    private void add(ValueSupplyItemDescriptor descriptor, Supplier<Object> supplier) {
+        suppliers.put(descriptor.getValueSupplyCategory(), descriptor.getName(), new ValueSupplyItem(descriptor.getName(), supplier));
     }
+
 
     public void supplyAllOf(ValueSupplyCategory category, Consumer<Map<String, Object>> allConsumer) {
         allConsumer.accept(itemsWith(category));
@@ -65,30 +59,15 @@ public class ValueSupply {
         }
     }
 
-    public void resolvePending(Function<String, Optional<Supplier<Object>>> supplierResolver) {
-        for (Iterator<Entry<String, ValueSupplyCategory>> iterator = pendingSuppliers.entrySet().iterator(); iterator.hasNext();) {
-            Entry<String, ValueSupplyCategory> pending = iterator.next();
-            Optional<Supplier<Object>> supplierCandidate = supplierResolver.apply(pending.getKey());
+    public void resolvePending(SupplierFactory runTimeSupplierFactory) {
+        for (Iterator<ValueSupplyItemDescriptor> iterator = pendingSuppliers.iterator(); iterator.hasNext();) {
+            ValueSupplyItemDescriptor pending = iterator.next();
+            Optional<Supplier<Object>> supplierCandidate = runTimeSupplierFactory.createFrom(pending);
 
             if (supplierCandidate.isPresent()) {
-                add(pending.getValue(), pending.getKey(), supplierCandidate.get());
+                add(pending, supplierCandidate.get());
                 iterator.remove();
             }
         }
-
-    }
-
-    public void resolvePending(AltSupplierFactory supplierFactory) {
-        for (Iterator<Entry<String, ValueSupplyCategory>> iterator = pendingSuppliers.entrySet().iterator(); iterator.hasNext();) {
-            Entry<String, ValueSupplyCategory> pending = iterator.next();
-            Optional<Supplier<Object>> supplierCandidate = supplierFactory.create(pending.getKey(), StandardValueType.String, "");
-
-            if (supplierCandidate.isPresent()) {
-                add(pending.getValue(), pending.getKey(), supplierCandidate.get());
-                iterator.remove();
-            }
-        }
-
-
     }
 }

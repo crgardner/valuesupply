@@ -1,9 +1,9 @@
 package valuesupply;
 
-import com.google.common.base.Supplier;
+import com.google.common.base.*;
 
 public interface SupplierFactory {
 
-    Supplier<Object> create(ValueSupplyItemDescriptor valueSupplyItemDescriptor) throws UnknownSupplierException;
+    Optional<Supplier<Object>> createFrom(ValueSupplyItemDescriptor valueSupplyItemDescriptor);
 
 }

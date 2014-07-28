@@ -15,6 +15,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import valuesupply.*;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -67,9 +68,9 @@ public class RestClientTest {
     private void prepareValueSupply() throws Exception {
         valueSupply = new ValueSupply(supplierFactory);
 
-        when(supplierFactory.create(contentTypeDescriptor)).thenReturn(Suppliers.<Object>ofInstance((MediaType.APPLICATION_JSON)));
-        when(supplierFactory.create(userNameDescriptor)).thenReturn(Suppliers.<Object>ofInstance(userNameHeaderValue));
-        when(supplierFactory.create(companyNameDescriptor)).thenReturn(Suppliers.<Object>ofInstance(companyNameComponentValue));
+        when(supplierFactory.createFrom(contentTypeDescriptor)).thenReturn(Optional.of(Suppliers.<Object>ofInstance((MediaType.APPLICATION_JSON))));
+        when(supplierFactory.createFrom(userNameDescriptor)).thenReturn(Optional.of(Suppliers.<Object>ofInstance(userNameHeaderValue)));
+        when(supplierFactory.createFrom(companyNameDescriptor)).thenReturn(Optional.of(Suppliers.<Object>ofInstance(companyNameComponentValue)));
 
         valueSupply.addItemBasedOn(companyNameDescriptor);
         valueSupply.addItemBasedOn(contentTypeDescriptor);
