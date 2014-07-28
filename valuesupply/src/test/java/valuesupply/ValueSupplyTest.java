@@ -116,7 +116,7 @@ public class ValueSupplyTest {
     public void offersResolutionOfSinglePendingSupplier() throws Exception {
         valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
 
-        valueSupply.resolvePending(new SupplierFactory() {
+        valueSupply.resolvePendingItems(new SupplierFactory() {
 
             @Override
             public Optional<Supplier<Object>> createFrom(ValueSupplyItemDescriptor descriptor) {
@@ -142,8 +142,8 @@ public class ValueSupplyTest {
 
         valueSupply.addItemBasedOn(descriptor);
 
-        valueSupply.resolvePending(supplierFactory);
-        valueSupply.resolvePending(supplierFactory);
+        valueSupply.resolvePendingItems(supplierFactory);
+        valueSupply.resolvePendingItems(supplierFactory);
 
         verify(supplierFactory, times(1)).createFrom(descriptor);
     }
@@ -153,7 +153,7 @@ public class ValueSupplyTest {
         valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
         valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, goodbyeName, StandardValueType.String));
 
-        valueSupply.resolvePending(new SupplierFactory() {
+        valueSupply.resolvePendingItems(new SupplierFactory() {
 
             @Override
             public Optional<Supplier<Object>> createFrom(ValueSupplyItemDescriptor descriptor) {
@@ -171,7 +171,7 @@ public class ValueSupplyTest {
     public void ignoresUnresolvedPendingSuppliers() throws Exception {
         valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
 
-        valueSupply.resolvePending(new SupplierFactory() {
+        valueSupply.resolvePendingItems(new SupplierFactory() {
 
             @Override
             public Optional<Supplier<Object>> createFrom(ValueSupplyItemDescriptor descriptor) {

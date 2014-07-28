@@ -16,20 +16,19 @@ public class ValueSupply {
         this.knownSupplierFactory = knownSupplierFactory;
     }
 
-    public void addItemBasedOn(ValueSupplyItemDescriptor descriptor)
-            throws UnknownSupplierException {
+    public void addItemBasedOn(ValueSupplyItemDescriptor descriptor) throws UnknownSupplierException {
         if (descriptor.isResolutionRequired()) {
             pendingSuppliers.add(descriptor);
             return;
         }
 
-        Optional<Supplier<Object>> optionalSupplier = knownSupplierFactory.createFrom(descriptor);
+        Optional<Supplier<Object>> supplierCandidate = knownSupplierFactory.createFrom(descriptor);
 
-        if (!optionalSupplier.isPresent()) {
+        if (!supplierCandidate.isPresent()) {
             throw new UnknownSupplierException();
         }
 
-        add(descriptor, optionalSupplier.get());
+        add(descriptor, supplierCandidate.get());
     }
 
     private void add(ValueSupplyItemDescriptor descriptor, Supplier<Object> supplier) {
@@ -59,10 +58,10 @@ public class ValueSupply {
         }
     }
 
-    public void resolvePending(SupplierFactory runTimeSupplierFactory) {
+    public void resolvePendingItems(SupplierFactory runtimeSupplierFactory) {
         for (Iterator<ValueSupplyItemDescriptor> iterator = pendingSuppliers.iterator(); iterator.hasNext();) {
             ValueSupplyItemDescriptor pending = iterator.next();
-            Optional<Supplier<Object>> supplierCandidate = runTimeSupplierFactory.createFrom(pending);
+            Optional<Supplier<Object>> supplierCandidate = runtimeSupplierFactory.createFrom(pending);
 
             if (supplierCandidate.isPresent()) {
                 add(pending, supplierCandidate.get());
