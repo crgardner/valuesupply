@@ -31,6 +31,7 @@ public class ValueSupplyTest {
     private Supplier<Object> enRouteSupplier;
     private Supplier<Object> goodbyeSupplier;
 
+
     @Mock
     private Consumer<Map<String, Object>> allConsumer;
 
@@ -38,11 +39,14 @@ public class ValueSupplyTest {
     private Consumer<ValueSupplyItem> eachConsumer;
 
     @Mock
-    private SupplierFactory supplierFactory;
+    private SupplierFactory knownSupplierFactory;
+
+    @Mock
+    private SupplierFactory runtimeSupplierFactory;
 
     @Before
     public void setUp() {
-        valueSupply = new ValueSupply(supplierFactory);
+        valueSupply = new ValueSupply(knownSupplierFactory);
         helloName = "hello";
         enRouteName = "enRoute";
         goodbyeName = "goodbye";
@@ -107,7 +111,7 @@ public class ValueSupplyTest {
 
     @Test(expected=UnknownSupplierException.class)
     public void rejectsAttemptsToAddUnresolvableSupplier() throws Exception {
-        when(supplierFactory.createFrom(any(ValueSupplyItemDescriptor.class))).thenReturn(Optional.<Supplier<Object>>absent());
+        when(knownSupplierFactory.createFrom(any(ValueSupplyItemDescriptor.class))).thenReturn(Optional.<Supplier<Object>>absent());
 
         valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(urlComponentCategory, "asOfDate", StandardValueType.LocalDate));
     }
@@ -132,20 +136,14 @@ public class ValueSupplyTest {
     @Test
     public void ensuresResolvedItemsAreNoLongerPending() throws Exception {
         descriptor = aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String);
-        SupplierFactory supplierFactory = spy(new SupplierFactory() {
-
-            @Override
-            public Optional<Supplier<Object>> createFrom(ValueSupplyItemDescriptor descriptor) {
-                return Optional.of(helloSupplier);
-            }
-        });
+        when(runtimeSupplierFactory.createFrom(descriptor)).thenReturn(Optional.of(helloSupplier));
 
         valueSupply.addItemBasedOn(descriptor);
 
-        valueSupply.resolvePendingItems(supplierFactory);
-        valueSupply.resolvePendingItems(supplierFactory);
+        valueSupply.resolvePendingItems(runtimeSupplierFactory);
+        valueSupply.resolvePendingItems(runtimeSupplierFactory);
 
-        verify(supplierFactory, times(1)).createFrom(descriptor);
+        verify(runtimeSupplierFactory, times(1)).createFrom(descriptor);
     }
 
     @Test
@@ -193,7 +191,7 @@ public class ValueSupplyTest {
     }
 
     private void havingASupplierFactoryWithAllKnownSuppliers() throws UnknownSupplierException {
-        when(supplierFactory.createFrom(any(ValueSupplyItemDescriptor.class))).thenReturn(Optional.of(helloSupplier)).thenReturn(Optional.of(enRouteSupplier));
+        when(knownSupplierFactory.createFrom(any(ValueSupplyItemDescriptor.class))).thenReturn(Optional.of(helloSupplier)).thenReturn(Optional.of(enRouteSupplier));
     }
 
     private ValueSupplyItemDescriptor aValueSupplyItemDescriptor(
