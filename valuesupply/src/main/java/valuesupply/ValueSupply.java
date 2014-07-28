@@ -64,12 +64,17 @@ public class ValueSupply {
 
     public void resolvePendingItems(SupplierFactory runtimeSupplierFactory) {
         for (Iterator<ValueSupplyItemDescriptor> iterator = pendingSupplyItems.iterator(); iterator.hasNext();) {
-            ValueSupplyItemDescriptor pending = iterator.next();
-            Optional<Supplier<Object>> supplierCandidate = runtimeSupplierFactory.createFrom(pending);
-
-            addToResolvedIfPossible(pending, supplierCandidate);
-            removeFromPendingIfNecessary(iterator, supplierCandidate);
+            resolvePendingItem(runtimeSupplierFactory, iterator);
         }
+    }
+
+    private void resolvePendingItem(SupplierFactory runtimeSupplierFactory, Iterator<ValueSupplyItemDescriptor> iterator) {
+        ValueSupplyItemDescriptor pending = iterator.next();
+
+        Optional<Supplier<Object>> supplierCandidate = runtimeSupplierFactory.createFrom(pending);
+
+        addToResolvedIfPossible(pending, supplierCandidate);
+        removeFromPendingIfNecessary(iterator, supplierCandidate);
     }
 
     private void removeFromPendingIfNecessary(Iterator<ValueSupplyItemDescriptor> iterator, Optional<Supplier<Object>> supplierCandidate) {

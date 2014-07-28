@@ -21,7 +21,7 @@ public class ValueSupplyTest {
     private ValueSupplyCategory urlComponentCategory;
 
     private ValueSupply valueSupply;
-    private ValueSupplyItemDescriptor descriptor;
+    private ValueSupplyItemDescriptor helloDescriptor;
 
     private String helloName;
     private String enRouteName;
@@ -30,7 +30,6 @@ public class ValueSupplyTest {
     private Supplier<Object> helloSupplier;
     private Supplier<Object> enRouteSupplier;
     private Supplier<Object> goodbyeSupplier;
-
 
     @Mock
     private Consumer<Map<String, Object>> allConsumer;
@@ -57,6 +56,8 @@ public class ValueSupplyTest {
         helloSupplier = Suppliers.<Object> ofInstance("hello");
         enRouteSupplier = Suppliers.<Object> ofInstance("onTheWay");
         goodbyeSupplier = Suppliers.<Object> ofInstance("goodbye");
+
+        helloDescriptor = aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String);
     }
 
     @Test
@@ -65,7 +66,6 @@ public class ValueSupplyTest {
 
         valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, helloName));
         valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, enRouteName));
-
         valueSupply.supplyAllOf(httpHeaderCategory, allConsumer);
 
         verify(allConsumer).accept(aMapOf(helloName, helloSupplier.get(),
@@ -86,7 +86,6 @@ public class ValueSupplyTest {
 
         valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, helloName));
         valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, enRouteName));
-
         valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
         verifyConsumerAcceptsValueSupplyItemOf(helloName, helloSupplier);
@@ -102,8 +101,7 @@ public class ValueSupplyTest {
 
     @Test
     public void addsToPendingWhenDescriptorIndicatesResolutionIsRequired() throws Exception {
-        valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
-
+        valueSupply.addItemBasedOn(helloDescriptor);
         valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
         verifyZeroInteractions(eachConsumer);
@@ -118,16 +116,10 @@ public class ValueSupplyTest {
 
     @Test
     public void offersResolutionOfSinglePendingSupplier() throws Exception {
-        valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
+        when(runtimeSupplierFactory.createFrom(helloDescriptor)).thenReturn(Optional.of(helloSupplier));
 
-        valueSupply.resolvePendingItems(new SupplierFactory() {
-
-            @Override
-            public Optional<Supplier<Object>> createFrom(ValueSupplyItemDescriptor descriptor) {
-                return Optional.of(helloSupplier);
-            }
-        });
-
+        valueSupply.addItemBasedOn(helloDescriptor);
+        valueSupply.resolvePendingItems(runtimeSupplierFactory);
         valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
         verifyConsumerAcceptsValueSupplyItemOf(helloName, helloSupplier);
@@ -135,20 +127,18 @@ public class ValueSupplyTest {
 
     @Test
     public void ensuresResolvedItemsAreNoLongerPending() throws Exception {
-        descriptor = aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String);
-        when(runtimeSupplierFactory.createFrom(descriptor)).thenReturn(Optional.of(helloSupplier));
+        when(runtimeSupplierFactory.createFrom(helloDescriptor)).thenReturn(Optional.of(helloSupplier));
 
-        valueSupply.addItemBasedOn(descriptor);
-
+        valueSupply.addItemBasedOn(helloDescriptor);
         valueSupply.resolvePendingItems(runtimeSupplierFactory);
         valueSupply.resolvePendingItems(runtimeSupplierFactory);
 
-        verify(runtimeSupplierFactory, times(1)).createFrom(descriptor);
+        verify(runtimeSupplierFactory, times(1)).createFrom(helloDescriptor);
     }
 
     @Test
     public void offersResolutionOfMultiplePendingSuppliers() throws Exception {
-        valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
+        valueSupply.addItemBasedOn(helloDescriptor);
         valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, goodbyeName, StandardValueType.String));
 
         valueSupply.resolvePendingItems(new SupplierFactory() {
@@ -167,16 +157,10 @@ public class ValueSupplyTest {
 
     @Test
     public void ignoresUnresolvedPendingSuppliers() throws Exception {
-        valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
+        when(runtimeSupplierFactory.createFrom(helloDescriptor)).thenReturn(Optional.<Supplier<Object>>absent());
 
-        valueSupply.resolvePendingItems(new SupplierFactory() {
-
-            @Override
-            public Optional<Supplier<Object>> createFrom(ValueSupplyItemDescriptor descriptor) {
-                return Optional.absent();
-            }
-        });
-
+        valueSupply.addItemBasedOn(helloDescriptor);
+        valueSupply.resolvePendingItems(runtimeSupplierFactory);
         valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
         verifyZeroInteractions(eachConsumer);
