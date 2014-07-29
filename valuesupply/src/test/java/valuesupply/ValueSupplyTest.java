@@ -66,6 +66,7 @@ public class ValueSupplyTest {
 
         valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, helloName));
         valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, enRouteName));
+        valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(urlComponentCategory, goodbyeName));
         valueSupply.supplyAllOf(httpHeaderCategory, allConsumer);
 
         verify(allConsumer).accept(aMapOf(helloName, helloSupplier.get(),
@@ -86,6 +87,7 @@ public class ValueSupplyTest {
 
         valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, helloName));
         valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(httpHeaderCategory, enRouteName));
+        valueSupply.addItemBasedOn(aResolvableValueSupplyDescriptor(urlComponentCategory, goodbyeName));
         valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
         verifyConsumerAcceptsValueSupplyItemOf(helloName, helloSupplier);

@@ -22,6 +22,10 @@ public class ValueSupply {
             return;
         }
 
+        doAdd(descriptor);
+    }
+
+    private void doAdd(ValueSupplyItemDescriptor descriptor) throws UnknownSupplierException {
         Optional<Supplier<Object>> supplierCandidate = knownSupplierFactory.createFrom(descriptor);
 
         verifyAvailability(supplierCandidate);
