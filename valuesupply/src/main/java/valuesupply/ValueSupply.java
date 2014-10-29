@@ -1,17 +1,17 @@
 package valuesupply;
 
+import static java.util.stream.Collectors.toMap;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import util.function.Consumer;
+import java.util.function.Consumer;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Table;
 
 public class ValueSupply {
@@ -48,24 +48,18 @@ public class ValueSupply {
     }
 
     private Map<String, Object> itemsWith(ValueSupplyCategory category) {
-        Map<String, ValueSupplyItem> categoryItemsByName = suppliers.row(category);
-
-        return Maps.transformValues(categoryItemsByName, new Function<ValueSupplyItem, Object>() {
-
-            @Override
-            public Object apply(ValueSupplyItem item) {
-                return item.valueAsString();
-            }
-        });
+        Map<String, ValueSupplyItem> itemsByName = suppliers.row(category);
+        
+        return itemsByName.entrySet().stream()
+        				  .collect(toMap(Entry::getKey, entry -> entry.getValue().valueAsString()));
     }
 
     public void supplyEachOf(ValueSupplyCategory category, Consumer<ValueSupplyItem> eachConsumer) {
-        for (ValueSupplyItem valueSupplyItem : suppliers.row(category).values()) {
-            eachConsumer.accept(valueSupplyItem);
-        }
+    	suppliers.row(category).values().forEach(item -> eachConsumer.accept(item));
     }
 
     public void resolvePending(Function<String, Optional<Supplier<Object>>> supplierResolver) {
+    	
         for (Iterator<Entry<String, ValueSupplyCategory>> iterator = pendingSuppliers.entrySet().iterator(); iterator.hasNext();) {
             Entry<String, ValueSupplyCategory> pending = iterator.next();
             Optional<Supplier<Object>> supplierCandidate = supplierResolver.apply(pending.getKey());

@@ -1,6 +1,12 @@
 package valuesupply;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.refEq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Map;
 
@@ -9,8 +15,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import util.function.Consumer;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -34,10 +38,10 @@ public class ValueSupplyTest {
     private Supplier<Object> goodbyeSupplier;
 
     @Mock
-    private Consumer<Map<String, Object>> allConsumer;
+    private java.util.function.Consumer<Map<String, Object>> allConsumer;
 
     @Mock
-    private Consumer<ValueSupplyItem> eachConsumer;
+    private java.util.function.Consumer<ValueSupplyItem> eachConsumer;
 
     @Mock
     private SupplierFactory supplierFactory;
