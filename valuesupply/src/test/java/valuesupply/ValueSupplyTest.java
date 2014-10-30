@@ -108,14 +108,7 @@ public class ValueSupplyTest {
     public void offersResolutionOfSinglePendingSupplier() throws Exception {
         valueSupply.addItemBasedOn(aValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
 
-        valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
-
-            @Override
-            public Optional<Supplier<Object>> apply(String itemName) {
-                return Optional.of(helloSupplier);
-            }
-        });
-
+        valueSupply.resolvePending((itemName) -> Optional.of(helloSupplier));
         valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
         verifyConsumerAcceptsValueSupplyItemOf(helloName, helloSupplier);
@@ -144,14 +137,7 @@ public class ValueSupplyTest {
         valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
         valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(httpHeaderCategory, goodbyeName, StandardValueType.String));
 
-        valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
-
-            @Override
-            public Optional<Supplier<Object>> apply(String itemName) {
-                return Optional.of((itemName == helloName) ? helloSupplier : goodbyeSupplier);
-            }
-        });
-
+        valueSupply.resolvePending((itemName) -> Optional.of((itemName == helloName) ? helloSupplier : goodbyeSupplier));
         valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
         verifyConsumerAcceptsValueSupplyItemOf(helloName, helloSupplier);
@@ -162,14 +148,7 @@ public class ValueSupplyTest {
     public void ignoresUnresolvedPendingSuppliers() throws Exception {
         valueSupply.addItemBasedOn(new ValueSupplyItemDescriptor(httpHeaderCategory, helloName, StandardValueType.String));
 
-        valueSupply.resolvePending(new Function<String, Optional<Supplier<Object>>>() {
-
-            @Override
-            public Optional<Supplier<Object>> apply(String itemName) {
-                return Optional.empty();
-            }
-        });
-
+        valueSupply.resolvePending((itemName) -> Optional.empty());
         valueSupply.supplyEachOf(httpHeaderCategory, eachConsumer);
 
         verify(eachConsumer, never()).accept(any(ValueSupplyItem.class));
