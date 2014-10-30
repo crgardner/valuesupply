@@ -22,7 +22,7 @@ public class ValueSupplyItemDescriptor {
         this.valueSupplyCategory = valueSupplyCategory;
     }
 
-    public String getName() {
+    public String name() {
         return name;
     }
 
@@ -34,7 +34,7 @@ public class ValueSupplyItemDescriptor {
         return stringValue;
     }
 
-    public ValueSupplyCategory getValueSupplyCategory() {
+    public ValueSupplyCategory category() {
         return valueSupplyCategory;
     }
 

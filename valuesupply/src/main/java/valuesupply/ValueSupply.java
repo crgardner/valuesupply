@@ -6,11 +6,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
@@ -29,13 +29,13 @@ public class ValueSupply {
 
     public void addItemBasedOn(ValueSupplyItemDescriptor descriptor) throws UnknownSupplierException {
         if (descriptor.isResolutionRequired()) {
-            pend(descriptor.getValueSupplyCategory(), descriptor.getName());
+            pend(descriptor.category(), descriptor.name());
             return;
         }
 
-        Supplier<Object> supplier = supplierFactory.create(descriptor);
+        java.util.function.Supplier<Object> supplier = supplierFactory.create(descriptor);
 
-        add(descriptor.getValueSupplyCategory(), descriptor.getName(), supplier);
+        add(descriptor.category(), descriptor.name(), supplier);
 
     }
 
@@ -58,11 +58,11 @@ public class ValueSupply {
     	suppliers.row(category).values().forEach(item -> eachConsumer.accept(item));
     }
 
-    public void resolvePending(Function<String, Optional<Supplier<Object>>> supplierResolver) {
+    public void resolvePending(Function<String, Optional<Supplier<Object>>> function) {
     	
         for (Iterator<Entry<String, ValueSupplyCategory>> iterator = pendingSuppliers.entrySet().iterator(); iterator.hasNext();) {
             Entry<String, ValueSupplyCategory> pending = iterator.next();
-            Optional<Supplier<Object>> supplierCandidate = supplierResolver.apply(pending.getKey());
+            Optional<Supplier<Object>> supplierCandidate = function.apply(pending.getKey());
 
             if (supplierCandidate.isPresent()) {
                 add(pending.getValue(), pending.getKey(), supplierCandidate.get());

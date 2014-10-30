@@ -9,6 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,11 +19,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
+
+import example.BasicSupplier;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ValueSupplyTest {
@@ -56,9 +57,9 @@ public class ValueSupplyTest {
         httpHeaderCategory = new BasicValueSupplyCategory("http-header");
         urlComponentCategory = new BasicValueSupplyCategory("url-component");
 
-        helloSupplier = Suppliers.<Object> ofInstance("hello");
-        enRouteSupplier = Suppliers.<Object> ofInstance("onTheWay");
-        goodbyeSupplier = Suppliers.<Object> ofInstance("goodbye");
+        helloSupplier = new BasicSupplier<Object>("hello");
+        enRouteSupplier = new BasicSupplier<Object>("onTheWay");
+        goodbyeSupplier = new BasicSupplier<Object>("goodbye");
     }
 
     @Test
@@ -165,7 +166,7 @@ public class ValueSupplyTest {
 
             @Override
             public Optional<Supplier<Object>> apply(String itemName) {
-                return Optional.absent();
+                return Optional.empty();
             }
         });
 

@@ -1,6 +1,6 @@
 package valuesupply;
 
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 
 public interface SupplierFactory {
 

@@ -15,8 +15,8 @@ public class ValueSupplyItemDescriptorTest {
         descriptor = new ValueSupplyItemDescriptor(HTTP_HEADER, item, StandardValueType.LocalDate, null);
 
         assertThat(descriptor).isEqualTo(new ValueSupplyItemDescriptor(HTTP_HEADER, item, StandardValueType.LocalDate, null));
-        assertThat(descriptor.getValueSupplyCategory()).isEqualTo(HTTP_HEADER);
-        assertThat(descriptor.getName()).isEqualTo(item);
+        assertThat(descriptor.category()).isEqualTo(HTTP_HEADER);
+        assertThat(descriptor.name()).isEqualTo(item);
         assertThat(descriptor.getStringValue()).isNull();
         assertThat(descriptor.getValueType()).isEqualTo(StandardValueType.LocalDate);
     }
@@ -26,8 +26,8 @@ public class ValueSupplyItemDescriptorTest {
         descriptor = new ValueSupplyItemDescriptor(HTTP_HEADER, item, StandardValueType.String, "ABC");
 
         assertThat(descriptor).isEqualTo(new ValueSupplyItemDescriptor(HTTP_HEADER, item, StandardValueType.String, "ABC"));
-        assertThat(descriptor.getValueSupplyCategory()).isEqualTo(HTTP_HEADER);
-        assertThat(descriptor.getName()).isEqualTo(item);
+        assertThat(descriptor.category()).isEqualTo(HTTP_HEADER);
+        assertThat(descriptor.name()).isEqualTo(item);
         assertThat(descriptor.getStringValue()).isEqualTo("ABC");
         assertThat(descriptor.getValueType()).isEqualTo(StandardValueType.String);
     }

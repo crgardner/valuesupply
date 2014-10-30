@@ -9,7 +9,7 @@ public class BasicValueSupplyCategory implements ValueSupplyCategory {
     }
     
     @Override
-    public String getName() {
+    public String name() {
         return name;
     }
 
