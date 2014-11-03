@@ -26,11 +26,11 @@ public class ValueSupplyItemDescriptor {
         return name;
     }
 
-    public ValueType getValueType() {
+    public ValueType valueType() {
         return valueType;
     }
 
-    public String getStringValue() {
+    public String stringValue() {
         return stringValue;
     }
 
