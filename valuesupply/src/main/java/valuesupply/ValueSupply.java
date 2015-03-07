@@ -33,7 +33,7 @@ public class ValueSupply {
             return;
         }
 
-        java.util.function.Supplier<Object> supplier = supplierFactory.create(descriptor);
+        Supplier<Object> supplier = supplierFactory.create(descriptor);
 
         add(descriptor.category(), descriptor.name(), supplier);
 
