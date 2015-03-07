@@ -61,14 +61,20 @@ public class ValueSupply {
     public void resolvePending(Function<String, Optional<Supplier<Object>>> function) {
     	
         for (Iterator<Entry<String, ValueSupplyCategory>> iterator = pendingSuppliers.entrySet().iterator(); iterator.hasNext();) {
-            Entry<String, ValueSupplyCategory> pending = iterator.next();
-            Optional<Supplier<Object>> supplierCandidate = function.apply(pending.getKey());
-
-            if (supplierCandidate.isPresent()) {
-                add(pending.getValue(), pending.getKey(), supplierCandidate.get());
-                iterator.remove();
-            }
+            doResolvePending(function, iterator, iterator.next());
         }
 
     }
+
+	private void doResolvePending(
+			Function<String, Optional<Supplier<Object>>> function,
+			Iterator<Entry<String, ValueSupplyCategory>> iterator,
+			Entry<String, ValueSupplyCategory> pending) {
+		Optional<Supplier<Object>> supplierCandidate = function.apply(pending.getKey());
+
+		if (supplierCandidate.isPresent()) {
+		    add(pending.getValue(), pending.getKey(), supplierCandidate.get());
+		    iterator.remove();
+		}
+	}
 }
